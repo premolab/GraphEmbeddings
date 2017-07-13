@@ -9,7 +9,7 @@ from collections import Counter
 
 from six.moves import zip
 
-from deepwalk import graph
+from .graph import build_deepwalk_corpus_iter, grouper
 
 logger = logging.getLogger("deepwalk")
 
@@ -54,7 +54,7 @@ def _write_walks_to_disk(args):
   G = __current_graph
   t_0 = time()
   with open(f, 'w') as fout:
-    for walk in graph.build_deepwalk_corpus_iter(G=G, num_paths=num_paths, path_length=path_length,
+    for walk in build_deepwalk_corpus_iter(G=G, num_paths=num_paths, path_length=path_length,
                                                  alpha=alpha, rand=rand):
       fout.write(u"{}\n".format(u" ".join(__vertex2str[v] for v in walk)))
   logger.debug("Generated new file {}, it took {} seconds".format(f, time() - t_0))
@@ -75,7 +75,7 @@ def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=rando
     paths_per_worker = [1 for x in range(num_paths)]
   else:
     paths_per_worker = [len(filter(lambda z: z!= None, [y for y in x]))
-                        for x in graph.grouper(int(num_paths / num_workers)+1, range(1, num_paths+1))]
+                        for x in grouper(int(num_paths / num_workers)+1, range(1, num_paths+1))]
 
   with ProcessPoolExecutor(max_workers=num_workers) as executor:
     for size, file_, ppw in zip(executor.map(count_lines, files_list), files_list, paths_per_worker):
