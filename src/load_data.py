@@ -35,3 +35,6 @@ def load_blog_catalog():
     # comms_filename = '{}/data/group-edges.csv'.format(PATH_TO_BLOG_CATALOG)
     # comms = pd.DataFrame.from_dict(dict(list(map(int, line.split())) for line in open(comms_filename)), orient='index')
     # return graph, comms, "BlogCatalog"
+
+if __name__ == '__main__':
+    print(len(load_blog_catalog()))
