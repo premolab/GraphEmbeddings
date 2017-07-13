@@ -7,11 +7,11 @@ from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import Pipeline
 
-from src.load_data import load_blog_catalog
-from src.transformers import transformers
-from src.classifiers import MultilabelOVRClassifier
+from load_data import load_blog_catalog
+from transformers import transformers
+from classifiers import MultilabelOVRClassifier
 
-from src.settings import PATH_TO_DUMPS
+from settings import PATH_TO_DUMPS
 
 qual_measures = {
     'f1-macro': lambda y_true, y_pred: metrics.f1_score(y_true, y_pred, average='macro'),

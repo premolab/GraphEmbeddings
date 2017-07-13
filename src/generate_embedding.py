@@ -1,9 +1,9 @@
 from itertools import product
 
-from src.load_data import load_blog_catalog
-from src.transformers import transformers
+from load_data import load_blog_catalog
+from transformers import transformers
 
-from src.settings import PATH_TO_DUMPS
+from settings import PATH_TO_DUMPS
 
 
 def generate_embedding(graph, method, dimension):

@@ -1,5 +1,5 @@
 import networkx as nx
-from src.settings import PATH_TO_BLOG_CATALOG
+from settings import PATH_TO_BLOG_CATALOG
 
 
 def read_graph(input_filepath, directed=False):
