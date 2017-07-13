@@ -1,7 +1,5 @@
 import pickle
 
-import networkx as nx
-import numpy as np
 
 from .TransformerInterface import TransformerInterface
 

@@ -2,7 +2,7 @@
 #
 # warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 # from gensim.models import KeyedVectors
-from src.lib import deepwalk
+from lib import deepwalk
 from .Node2VecTransformer import Node2VecTransformer
 
 
