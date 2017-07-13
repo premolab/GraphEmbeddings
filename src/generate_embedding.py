@@ -19,7 +19,7 @@ if __name__ == '__main__':
     # available methods:
     # 'stoc_hist', 'node2vec', 'stoc_opt', 'stocsk_opt',
     # 'bigclam', 'gamma', 'deepwalk', 'svd', 'nmf'
-    methods = ['node2vec']
+    methods = ['deepwalk']
     dimensions = [32]
     graph = load_blog_catalog()
     for method, dimension in product(methods, dimensions):
