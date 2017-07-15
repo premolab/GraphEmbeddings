@@ -7,8 +7,6 @@ import numpy as np
 import theano
 from theano import tensor as T
 
-from joblib import Parallel, delayed
-
 
 class Graph2vec:
     def __init__(self, graph, d,
@@ -47,9 +45,6 @@ class Graph2vec:
 
         self.network = self.init_network()
 
-        self.input_var_batch = None
-        self.adj_batch = None
-
         self.EPOCH_DEBUG_LINE = 'End Epoch {}/{}, ' + \
                                 'cost: {:.5f}, ' + \
                                 'last grad norm: {:.5f} ' + \
@@ -68,12 +63,10 @@ class Graph2vec:
         l_in = lasagne.layers.InputLayer(shape=(None, self.n), input_var=self.input_var)
         # Apply 20% dropout to the input data on training:
         l_in_drop = lasagne.layers.DropoutLayer(l_in, p=0.2)
-        network = lasagne.layers.DenseLayer(
-            incoming=l_in_drop,
-            num_units=self.d,
-            nonlinearity=lambda x: x / self.scale,
-            W=lasagne.init.Normal()
-        )
+        network = lasagne.layers.DenseLayer(incoming=l_in_drop,
+                                            num_units=self.d,
+                                            nonlinearity=lambda x: x / self.scale,
+                                            W=lasagne.init.Normal())
         return network
 
     def init_loss(self, deterministic):
@@ -112,29 +105,21 @@ class Graph2vec:
         params = lasagne.layers.get_all_params(self.network, trainable=True)
 
         learning_rate = T.scalar('learning_rate')
-        lr = 0.05
         if self.verbose != 0:
             print('Compiling...')
-        get_grad_norm = theano.function(
-            inputs=[self.input_var, self.adj_minibatch, self.scale],
-            outputs=T.grad(self.determ_loss, self.input_var).norm(2),
-            mode=mode
-        )
-        get_emb = theano.function(
-            inputs=[self.input_var, self.scale],
-            outputs=lasagne.layers.get_output(self.network, deterministic=True),
-            mode=mode,
-        )
+        get_grad_norm = theano.function(inputs=[self.input_var, self.adj_minibatch, self.scale],
+                                        outputs=T.grad(self.determ_loss, self.input_var).norm(2),
+                                        mode=mode)
+        get_emb = theano.function(inputs=[self.input_var, self.scale],
+                                  outputs=lasagne.layers.get_output(self.network, deterministic=True),
+                                  mode=mode,
+                                  )
         # updates = lasagne.updates.nesterov_momentum(self.loss, params, learning_rate=learning_rate, momentum=0.8)
-        updates = lasagne.updates.adagrad(
-            self.loss, params, learning_rate=learning_rate
-        )
-        train_function = theano.function(
-            inputs=[self.input_var, self.adj_minibatch, learning_rate, self.scale],
-            outputs=self.loss,
-            updates=updates,
-            mode=mode
-        )
+        updates = lasagne.updates.adagrad(self.loss, params, learning_rate=learning_rate)
+        train_fn = theano.function(inputs=[self.input_var, self.adj_minibatch, learning_rate, self.scale],
+                                   outputs=self.loss,
+                                   updates=updates,
+                                   mode=mode)
         # pickle.dump((loss, get_grad_norm, get_emb, updates, train_fn), open('./dumps/hist-theano', 'wb'))
         # (loss, get_grad_norm, get_emb, updates, train_fn) = pickle.load(open('./dumps/hist-theano', 'rb'))
 
@@ -142,6 +127,7 @@ class Graph2vec:
         if self.verbose != 0:
             print('Done!\nOptimization...')
         iters = 0
+        lr = 0.005
         last_loss = float('inf')
         best_loss = last_loss
         bucket = 0
@@ -150,27 +136,42 @@ class Graph2vec:
         self.max_norm = np.maximum(self.max_norm, 2 * np.max(np.linalg.norm(self.embedding, axis=1)))
         grad_norm = 0.
         for epoch in range(num_epochs):
+            if self.verbose != 0:
+                print('epoch: {}'.format(epoch))
+            # In each epoch, we do a full pass over the training data:
+            train_loss = 0
 
             train_batches = 0
             start_time = time.time()
             minibatches = self.minibatches()
-            train_loss = self.proceed_batches(minibatches, train_function, lr)
+            for batch in minibatches:
+                nodes_idxs, input_var, adj, ego_node_indx = batch
 
-            grad_norm = 0.8 * grad_norm + \
-                        0.2 * get_grad_norm(
-                            self.input_var_batch, self.adj_batch, self.max_norm
-                        )
+                train_loss += train_fn(input_var, adj, lr, self.max_norm)
+                train_batches += 1
+                iters += 1
+                if iters % 100 == 1:
+                    self.debug_print(
+                        False, iters, train_loss / train_batches, self.max_norm, time.time() - start_time
+                    )
+                    embedding = get_emb(self.adjacency_matrix, self.max_norm)
+                    self.max_norm = np.maximum(
+                        self.max_norm, 2 * np.max(np.linalg.norm(embedding, axis=1))
+                    )
 
-            self.debug_print_epoch(
-                epoch + 1, num_epochs,
-                train_loss / train_batches, grad_norm, lr,
-                time.time() - start_time, self.max_norm, bucket
-            )
+                if self.save_intern_embeddings_step != 0 and \
+                        (iters % self.save_intern_embeddings_step == 1 or
+                                 iters <= self.save_intern_embeddings_step * 2):
+                    embedding = get_emb(self.adjacency_matrix, self.max_norm)
+                    self.save(self.save_intern_name_prefix + str(iters).zfill(6) + '.tmp_emb', embedding)
+
+            grad_norm = 0.8 * grad_norm + 0.2 * get_grad_norm(input_var, adj, self.max_norm)
+
+            self.debug_print(True, epoch + 1, num_epochs, train_loss / train_batches, grad_norm, lr,
+                        time.time() - start_time, self.max_norm, bucket)
 
             embedding = get_emb(self.adjacency_matrix, self.max_norm)
-            self.max_norm = np.maximum(
-                self.max_norm, 2 * np.max(np.linalg.norm(embedding, axis=1))
-            )
+
             lr = self.update_step(lr, last_loss, train_loss, bucket, volume)
 
             if train_loss > best_loss - 0.005 * train_batches:
@@ -187,64 +188,13 @@ class Graph2vec:
             if grad_norm < 1e-3:
                 break
 
-        return get_emb(self.adjacency_matrix, self.max_norm)
+        self.embedding = get_emb(self.adjacency_matrix, self.max_norm)
 
-    def proceed_batches(self, batches, train_function, learning_rate):
-        train_losses = Parallel(n_jobs=3)(
-            delayed(proceed_batch)(self, batch, train_function, learning_rate) for batch in batches
-        )
-        train_loss = sum(train_losses)
+    def debug_print(self, epoch, *args):
+        if self.verbose == 0:
+            return
 
-        # for batch in batches:
-        #     nodes_idxs, input_var, adj, ego_node_indx = batch
-        #     train_loss += train_function(input_var, adj, learning_rate, self.max_norm)
-
-            # train_batches += 1
-            # iters += 1
-            # if iters % 100 == 1:
-            #     self.debug_print(
-            #         False, iters, train_loss / train_batches, self.max_norm, time.time() - start_time
-            #     )
-            #     embedding = get_emb(
-            #         self.adjacency_matrix, self.max_norm
-            #     )
-            #     self.max_norm = np.maximum(
-            #         self.max_norm, 2 * np.max(np.linalg.norm(embedding, axis=1))
-            #     )
-
-            # if self.save_intern_embeddings_step != 0 and \
-            #         (iters % self.save_intern_embeddings_step == 1 or
-            #                  iters <= self.save_intern_embeddings_step * 2):
-            #     embedding = get_emb(
-            #         self.adjacency_matrix, self.max_norm
-            #     )
-            #     self.save(
-            #         self.save_intern_name_prefix + str(iters).zfill(6) + '.tmp_emb',
-            #         embedding
-            #     )
-        return train_loss
-
-    def proceed_batch(self, batch, train_function, learning_rate):
-        nodes_idxs, self.input_var_batch, self.adj_batch, ego_node_indx = batch
-        train_loss = train_function(
-            self.input_var_batch, self.adj_batch, learning_rate, self.max_norm
-        )
-        return train_loss
-
-    def debug_print_epoch(self, *args):
-        print(self.EPOCH_DEBUG_LINE.format(*args))
-
-    def debug_print_iter(self, *args):
-        print(self.ITER_DEBUG_LINE.format(*args))
-
-
-# must be global to use in joblib
-def proceed_batch(graph2vec_instance, batch, train_function, learning_rate):
-    nodes_idxs, graph2vec_instance.input_var_batch, graph2vec_instance.adj_batch, ego_node_indx = batch
-    train_loss = train_function(
-        graph2vec_instance.input_var_batch,
-        graph2vec_instance.adj_batch,
-        learning_rate,
-        graph2vec_instance.max_norm
-    )
-    return train_loss
+        if epoch:
+            print(self.EPOCH_DEBUG_LINE.format(*args))
+        else:
+            print(self.ITER_DEBUG_LINE.format(*args))
