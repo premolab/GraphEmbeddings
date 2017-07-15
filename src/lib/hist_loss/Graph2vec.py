@@ -21,7 +21,9 @@ class Graph2vec:
         self.verbose = verbose
         self.last_outputtime = 0
         self.save_intern_embeddings_step = save_intern_embeddings_step
-        self.save_intern_name_prefix = save_intern_name_prefix if save_intern_name_prefix is not None else './emb/interns/temp2_histloss_'
+        self.save_intern_name_prefix = save_intern_name_prefix \
+            if save_intern_name_prefix is not None \
+            else './emb/interns/temp2_histloss_'
 
         if isinstance(graph, nx.Graph):
             self.graph = graph
@@ -42,6 +44,16 @@ class Graph2vec:
         self.adj_minibatch = T.matrix('adj_minibatch')  # mini_batch_size to mini_batch_size
 
         self.network = self.init_network()
+
+        self.EPOCH_DEBUG_LINE = 'End Epoch {}/{}, ' + \
+                                'cost: {:.5f}, ' + \
+                                'last grad norm: {:.5f} ' + \
+                                'step: {:.6f} took {:.3f} sec, ' + \
+                                'max_norm: {:.3f}, ' + \
+                                'bucket: {}'
+        self.ITER_DEBUG_LINE = '\tIter {}, ' + \
+                               'cost: {:.5f}, ' + \
+                               'max_norm: {:.3f} took {:.3f} sec'
 
         if fit:
             res = self.optimize()
@@ -132,29 +144,30 @@ class Graph2vec:
             train_batches = 0
             start_time = time.time()
             minibatches = self.minibatches()
-            # if self.verbose != 0:
-                # print('number of batches: {}'.format(len(minibatches)))
             for batch in minibatches:
                 nodes_idxs, input_var, adj, ego_node_indx = batch
 
-                if self.verbose != 0:
-                    print('\ttrain batch: {}'.format(train_batches))
                 train_loss += train_fn(input_var, adj, lr, self.max_norm)
                 train_batches += 1
                 iters += 1
                 if iters % 100 == 1:
-                    self.output(False, iters, train_loss / train_batches, self.max_norm, time.time() - start_time)
+                    self.debug_print(
+                        False, iters, train_loss / train_batches, self.max_norm, time.time() - start_time
+                    )
                     embedding = get_emb(self.adjacency_matrix, self.max_norm)
-                    self.max_norm = np.maximum(self.max_norm, 2 * np.max(np.linalg.norm(embedding, axis=1)))
+                    self.max_norm = np.maximum(
+                        self.max_norm, 2 * np.max(np.linalg.norm(embedding, axis=1))
+                    )
 
-                if self.save_intern_embeddings_step != 0 and (iters % self.save_intern_embeddings_step == 1 or
-                                                                      iters <= self.save_intern_embeddings_step * 2):
+                if self.save_intern_embeddings_step != 0 and \
+                        (iters % self.save_intern_embeddings_step == 1 or
+                                 iters <= self.save_intern_embeddings_step * 2):
                     embedding = get_emb(self.adjacency_matrix, self.max_norm)
                     self.save(self.save_intern_name_prefix + str(iters).zfill(6) + '.tmp_emb', embedding)
 
             grad_norm = 0.8 * grad_norm + 0.2 * get_grad_norm(input_var, adj, self.max_norm)
 
-            self.output(True, epoch + 1, num_epochs, train_loss / train_batches, grad_norm, lr,
+            self.debug_print(True, epoch + 1, num_epochs, train_loss / train_batches, grad_norm, lr,
                         time.time() - start_time, self.max_norm, bucket)
 
             embedding = get_emb(self.adjacency_matrix, self.max_norm)
@@ -177,15 +190,11 @@ class Graph2vec:
 
         self.embedding = get_emb(self.adjacency_matrix, self.max_norm)
 
-    def output(self, epoch, *args):
-        if self.verbose == 0 or time.time() - self.last_outputtime < 5:
+    def debug_print(self, epoch, *args):
+        if self.verbose == 0:
             return
 
         if epoch:
-            self.last_outputtime = time.time()
-            print(('\rEnd Epoch {}/{}, cost: {:.5f}, last grad norm: {:.5f}' +
-                   ' step: {:.6f} took {:.3f} sec, max_norm: {:.3f}, bucket: {}' + ' '*10).format(*args), end='')
+            print(self.EPOCH_DEBUG_LINE.format(*args))
         else:
-            return
-            print('\r    Iter {}, cost: {:.5f}, max_norm: {:.3f} took {:.3f} sec'.format(*args))
-            self.last_outputtime = time.time()
+            print(self.ITER_DEBUG_LINE.format(*args))
