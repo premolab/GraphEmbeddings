@@ -191,7 +191,7 @@ class Graph2vec:
 
     def proceed_batches(self, batches, train_function, learning_rate):
         train_losses = Parallel(n_jobs=3)(
-            delayed(self.proceed_batch)(batch, train_function, learning_rate) for batch in batches
+            delayed(proceed_batch)(self, batch, train_function, learning_rate) for batch in batches
         )
         train_loss = sum(train_losses)
 
@@ -236,3 +236,15 @@ class Graph2vec:
 
     def debug_print_iter(self, *args):
         print(self.ITER_DEBUG_LINE.format(*args))
+
+
+# must be global to use in joblib
+def proceed_batch(graph2vec_instance, batch, train_function, learning_rate):
+    nodes_idxs, graph2vec_instance.input_var_batch, graph2vec_instance.adj_batch, ego_node_indx = batch
+    train_loss = train_function(
+        graph2vec_instance.input_var_batch,
+        graph2vec_instance.adj_batch,
+        learning_rate,
+        graph2vec_instance.max_norm
+    )
+    return train_loss
