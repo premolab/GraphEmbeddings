@@ -59,6 +59,7 @@ def run(args, nx_G=None, name=''):
     if nx_G is None:
         nx_G = read_graph(args)
     G = node2vec.Graph(nx_G, name, args.directed, args.p, args.q)
+    print("Preprocessing probs...")
     G.preprocess_transition_probs()
     print("Walking...")
     walks = G.simulate_walks(args.num_walks, args.walk_length)

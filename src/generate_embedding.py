@@ -19,8 +19,8 @@ if __name__ == '__main__':
     # available methods:
     # 'stoc_hist', 'node2vec', 'stoc_opt', 'stocsk_opt',
     # 'bigclam', 'gamma', 'deepwalk', 'svd', 'nmf'
-    methods = ['deepwalk', 'node2vec']
-    dimensions = [32, 64, 128]
+    methods = ['hist']
+    dimensions = [32]
     graph = load_blog_catalog()
     for method, dimension in product(methods, dimensions):
         generate_embedding(graph, method, dimension)

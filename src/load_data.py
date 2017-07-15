@@ -28,10 +28,15 @@ def read_graph(input_filepath, directed=False):
 
 
 def load_blog_catalog():
-    graph_filename = '{}/data/edges.csv'.format(PATH_TO_BLOG_CATALOG)
-    graph = read_graph(graph_filename)
-    return graph
-
+    # graph_filename = '{}/data/edges.csv'.format(PATH_TO_BLOG_CATALOG)
+    # graph = read_graph(graph_filename)
+    # return graph
+    G = nx.read_edgelist(
+        '{}/data/edges.csv'.format(PATH_TO_BLOG_CATALOG), nodetype=int
+    )
+    # for edge in G.edges():
+    #     G[edge[0]][edge[1]]['weight'] = 1
+    return G
     # comms_filename = '{}/data/group-edges.csv'.format(PATH_TO_BLOG_CATALOG)
     # comms = pd.DataFrame.from_dict(dict(list(map(int, line.split())) for line in open(comms_filename)), orient='index')
     # return graph, comms, "BlogCatalog"
