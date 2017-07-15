@@ -124,6 +124,8 @@ class Graph2vec:
         self.max_norm = np.maximum(self.max_norm, 2 * np.max(np.linalg.norm(self.embedding, axis=1)))
         grad_norm = 0.
         for epoch in range(num_epochs):
+            if self.verbose != 0:
+                print('epoch: {}'.format(epoch))
             # In each epoch, we do a full pass over the training data:
             train_loss = 0
 
@@ -134,6 +136,8 @@ class Graph2vec:
 
                 train_loss += train_fn(input_var, adj, lr, self.max_norm)
                 train_batches += 1
+                if self.verbose != 0:
+                    print('\ttrain batches: {}', train_batches)
                 iters += 1
                 if iters % 100 == 1:
                     self.output(False, iters, train_loss / train_batches, self.max_norm, time.time() - start_time)
