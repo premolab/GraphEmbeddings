@@ -131,13 +131,16 @@ class Graph2vec:
 
             train_batches = 0
             start_time = time.time()
-            for batch in self.minibatches():
+            minibatches = self.minibatches()
+            # if self.verbose != 0:
+                # print('number of batches: {}'.format(len(minibatches)))
+            for batch in minibatches:
                 nodes_idxs, input_var, adj, ego_node_indx = batch
 
+                if self.verbose != 0:
+                    print('\ttrain batch: {}'.format(train_batches))
                 train_loss += train_fn(input_var, adj, lr, self.max_norm)
                 train_batches += 1
-                if self.verbose != 0:
-                    print('\ttrain batches: {}', train_batches)
                 iters += 1
                 if iters % 100 == 1:
                     self.output(False, iters, train_loss / train_batches, self.max_norm, time.time() - start_time)
