@@ -111,8 +111,8 @@ class Graph2vec:
 
         params = lasagne.layers.get_all_params(self.network, trainable=True)
 
-        # learning_rate = T.scalar('learning_rate')
-        learning_rate = 0.05
+        learning_rate = T.scalar('learning_rate')
+        lr = 0.05
         if self.verbose != 0:
             print('Compiling...')
         get_grad_norm = theano.function(
@@ -154,7 +154,7 @@ class Graph2vec:
             train_batches = 0
             start_time = time.time()
             minibatches = self.minibatches()
-            train_loss = self.proceed_batches(minibatches, train_function, learning_rate)
+            train_loss = self.proceed_batches(minibatches, train_function, lr)
 
             grad_norm = 0.8 * grad_norm + \
                         0.2 * get_grad_norm(
@@ -163,7 +163,7 @@ class Graph2vec:
 
             self.debug_print_epoch(
                 epoch + 1, num_epochs,
-                train_loss / train_batches, grad_norm, learning_rate,
+                train_loss / train_batches, grad_norm, lr,
                 time.time() - start_time, self.max_norm, bucket
             )
 
@@ -171,7 +171,7 @@ class Graph2vec:
             self.max_norm = np.maximum(
                 self.max_norm, 2 * np.max(np.linalg.norm(embedding, axis=1))
             )
-            learning_rate = self.update_step(learning_rate, last_loss, train_loss, bucket, volume)
+            lr = self.update_step(lr, last_loss, train_loss, bucket, volume)
 
             if train_loss > best_loss - 0.005 * train_batches:
                 bucket += 1
