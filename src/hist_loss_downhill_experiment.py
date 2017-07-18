@@ -32,8 +32,12 @@ pos_samples = E_corr[pos_mask.nonzero()]
 neg_samples = E_corr[neg_mask.nonzero()]
 
 if neg_sampling:
-    neg_samples = srng.permutation(n=neg_samples.shape[0], size=(0, 1))[0 : 2 * pos_samples.shape[0]]
+    neg_samples = neg_samples[srng.permutation(n=neg_samples.shape[0], size=(1, ))[0, : 2 * pos_samples.shape[0]]]
+#    neg_samples = neg_samples[srng.choice(size=(2*pos_samples.shape[0], ), a=neg_samples.shape[0])]
 
+f2 = theano.function(
+    [A, E], [pos_samples, neg_samples]
+)
 
 def calc_hist_vec(samples, bin_num=bin_num):
     delta = 2/(bin_num - 1)
@@ -66,7 +70,7 @@ import time
 print('Compiling')
 t = time.time()
 f = theano.function(
-    [A, E], [E_norm, E_corr, pos_hist, neg_hist, loss]
+    [A, E], [E_norm, E_corr, pos_hist, neg_hist, loss, pos_mask, neg_mask]
 )
 print(time.time() - t)
 
@@ -97,8 +101,10 @@ t = time.time()
 res = f(adjacency_matrix, E_input)
 print(time.time() - t)
 
-# print(res[0])
-# print(res[1])
+print(res[0])
+print(res[1][:2])
 print(res[2])
 print(res[3])
 print(res[4])
+print(res[5][:2])
+print(res[6][:2])

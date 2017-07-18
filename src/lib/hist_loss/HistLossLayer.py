@@ -21,7 +21,9 @@ class HistLossLayer(lasagne.layers.MergeLayer):
 
         sim_pos = sim[pos_mask.nonzero()]
         sim_neg = sim[neg_mask.nonzero()]
+
         neg_sampling = self.srng.permutation(n=sim_neg.shape[0], size=(1,))[0, :2 * sim_pos.shape[0]]
+        # neg_sampling = self.srng.choice(size=(2*sim_pos.shape[0], ), a=sim_neg.shape[0])
         sim_neg = sim_neg[neg_sampling]
 
         return self.loss(sim_pos, sim_neg)
