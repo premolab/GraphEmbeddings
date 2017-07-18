@@ -5,6 +5,7 @@ from theano.tensor.shared_randomstreams import RandomStreams
 import numpy as np
 import pandas as pd
 import networkx as nx
+from settings import PATH_TO_DUMPS
 
 from load_data import load_blog_catalog
 
@@ -22,13 +23,7 @@ b = theano.shared(np.zeros((N, )))
 
 E_norm = E/E.norm(2, axis=1).reshape((E.shape[0], 1))
 
-E_corr, _ = theano.map(
-    lambda e_i: theano.map(
-        lambda e_j: T.dot(e_i, e_j),
-        E_norm
-    ),
-    E_norm
-)
+E_corr = T.dot(E_norm, E_norm.T)
 
 pos_mask = A
 neg_mask = 1 - pos_mask - T.eye(pos_mask.shape[0])
@@ -68,16 +63,21 @@ pass
 # testing
 import time
 
+print('Compiling')
 t = time.time()
 f = theano.function(
-    [A, E], [pos_hist, neg_hist, loss]
+    [A, E], [E_norm, E_corr, pos_hist, neg_hist, loss]
 )
 print(time.time() - t)
 
+# t = time.time()
+# res = f([[0, 1, 0], [1, 0, 1], [0, 1, 0]], [[1, 2, 3], [2, 3, 4], [-1, -2, -3]])
+# print(time.time() - t)
 
+print('Reading embedding')
 t = time.time()
 X = pd.read_csv(
-    '/home/stas/PycharmProjects/GraphEmbeddings/dumps/models/deepwalk_BlogCatalog_d32.csv',
+    '{}/models/deepwalk_BlogCatalog_d32.csv'.format(PATH_TO_DUMPS),
     delim_whitespace=True, header=None,
     skiprows=1,
     index_col=0
@@ -85,18 +85,20 @@ X = pd.read_csv(
 E_input = X.values
 print(time.time() - t)
 
+print('Reading graph')
 t = time.time()
 graph = load_blog_catalog()
 nodes = graph.nodes()
 adjacency_matrix = nx.adjacency_matrix(graph, nodes).todense().astype("float32")
 print(time.time() - t)
 
+print('Solving')
 t = time.time()
 res = f(adjacency_matrix, E_input)
 print(time.time() - t)
 
-print(res[0])
-print(res[1])
+# print(res[0])
+# print(res[1])
 print(res[2])
 print(res[3])
 print(res[4])
