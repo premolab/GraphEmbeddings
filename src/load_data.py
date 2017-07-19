@@ -1,5 +1,5 @@
 import networkx as nx
-from settings import PATH_TO_BLOG_CATALOG
+from settings import PATH_TO_BLOG_CATALOG, PATH_TO_KARATE
 
 
 def read_graph(input_filepath, directed=False):
@@ -37,9 +37,12 @@ def load_blog_catalog():
     # for edge in G.edges():
     #     G[edge[0]][edge[1]]['weight'] = 1
     return G
-    # comms_filename = '{}/data/group-edges.csv'.format(PATH_TO_BLOG_CATALOG)
-    # comms = pd.DataFrame.from_dict(dict(list(map(int, line.split())) for line in open(comms_filename)), orient='index')
-    # return graph, comms, "BlogCatalog"
+
+
+def load_karate():
+    graph_filename = '{}/karate.edgelist'.format(PATH_TO_KARATE)
+    return nx.read_edgelist(graph_filename, nodetype=int)
+
 
 if __name__ == '__main__':
     print(len(load_blog_catalog()))

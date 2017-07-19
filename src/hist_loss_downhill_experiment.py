@@ -7,39 +7,69 @@ import pandas as pd
 import networkx as nx
 from settings import PATH_TO_DUMPS
 
-from load_data import load_blog_catalog
+from load_data import load_blog_catalog, load_karate
 
-N = 10312
-dim = 32
+# class HistLoss:
+#     def __init__(self, N, dim, bin_num=64, neg_sampling=True, seed=None):
+#         self.bin_num = bin_num
+#         self.neg_sampling = neg_sampling
+#         self.srng = RandomStreams(seed=234)
+#
+#         self.A = T.dmatrix('A')
+#         self.w = theano.shared(np.random.normal(size=(N, dim)))
+#         self.b = theano.shared(np.zeros((N, dim)))
+#
+#     def compile(self):
+#         E = T.dot(self.A, self.w) + self.b
+#         E_norm = E / E.norm(2, axis=1).reshape((E.shape[0], 1))
+#         E_corr = T.dot(E_norm, E_norm.T)
+#         pos_mask = A
+#         neg_mask = 1 - pos_mask - T.eye(pos_mask.shape[0])
+
 srng = RandomStreams(seed=234)
 neg_sampling = True
 bin_num = 64
+dim = 16
 
+N = 10312
+graph = load_blog_catalog()
+nodes = graph.nodes()
+adjacency_matrix = nx.adjacency_matrix(graph, nodes).astype("float64")
+adj_array = adjacency_matrix.toarray()
+
+# graph = load_karate()
+# nodes = graph.nodes()
+# adjacency_matrix = nx.adjacency_matrix(graph, nodes).astype('float64')
+# N = adjacency_matrix.shape[0]
+# adj_array = adjacency_matrix.toarray()
+
+
+# variables to optimize
+w = theano.shared(np.random.normal(size=(N, dim)), 'w')
+b = theano.shared(np.zeros((N, dim)), 'b')
+
+# input for loss
 A = T.dmatrix('A')
-# E = T.dmatrix('E')
+batch_indxs = T.vector('batch_indxs', dtype='int64')
 
-w = theano.shared(np.random.normal(size=(N, dim)))
-b = theano.shared(np.zeros((N, dim)))
+# batched data
+A_batched = A[batch_indxs]  # shape: (batch_n, N)
+b_batched = b[batch_indxs]  # shape: (batch_n, dim)
 
-E = T.dot(A, w) + b
+E = T.dot(A_batched, w) + b_batched  # shape: (batch_n, dim)
 
-E_norm = E/E.norm(2, axis=1).reshape((E.shape[0], 1))
+E_norm = E/E.norm(2, axis=1).reshape((E.shape[0], 1))  # shape: (batch_n, batch_n)
 
-E_corr = T.dot(E_norm, E_norm.T)
+E_corr = T.dot(E_norm, E_norm.T)  # shape: (batch_n, batch_n)
 
-pos_mask = A
-neg_mask = 1 - pos_mask - T.eye(pos_mask.shape[0])
+pos_mask = A_batched[:, batch_indxs]  # shape: (batch_n, batch_n)
+neg_mask = 1 - pos_mask - T.eye(pos_mask.shape[0])  # shape: (batch_n, batch_n)
 
 pos_samples = E_corr[pos_mask.nonzero()]
 neg_samples = E_corr[neg_mask.nonzero()]
 
-if neg_sampling:
-    # neg_samples = neg_samples[srng.permutation(n=neg_samples.shape[0], size=(1, ))[0, : 2 * pos_samples.shape[0]]]
-    neg_samples = neg_samples[srng.choice(size=(2*pos_samples.shape[0], ), a=neg_samples.shape[0])]
-
-f2 = theano.function(
-    [A, E], [pos_samples, neg_samples]
-)
+# if neg_sampling:
+#     neg_samples = neg_samples[srng.choice(size=(2*pos_samples.shape[0], ), a=neg_samples.shape[0])]
 
 
 def calc_hist_vec(samples, bin_num=bin_num):
@@ -53,7 +83,7 @@ def calc_hist_vec(samples, bin_num=bin_num):
     H, _ = theano.map(
         lambda r: (
             T.sum(samples_sub_t_prev[T.eq(rs, r).nonzero()]) +
-            T.sum(t_next_sub_samples[T.eq(rs+1, r+1).nonzero()])
+            T.sum(t_next_sub_samples[T.eq(rs-1, r).nonzero()])
         ),
         np.arange(1, bin_num + 1)
     )
@@ -65,12 +95,23 @@ neg_hist = calc_hist_vec(neg_samples)
 agg_pos = T.extra_ops.cumsum(pos_hist)
 loss = T.sum(T.dot(agg_pos, neg_hist))
 
-graph = load_blog_catalog()
-nodes = graph.nodes()
-adjacency_matrix = nx.adjacency_matrix(graph, nodes).todense().astype("float32")
 
-downhill.minimize(loss, adjacency_matrix, inputs=[A])
-print(w.get_value(), b.get_value())
+def get_batch():
+    return np.random.choice(a=N, size=10), adj_array
+
+
+downhill.minimize(
+    loss,
+    # train=(np.arange(N), adj_array),
+    train=get_batch,
+    inputs=[batch_indxs, A],
+    monitor_gradients=True,
+    batch_size=10,
+    max_gradient_elem=0,
+    learning_rate=0.1
+)
+print(w.get_value())
+print(b.get_value())
 
 # # testing
 # import time
