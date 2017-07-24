@@ -1,6 +1,5 @@
 joblib
 theano
 lasagne
-sklearn
 networkx
 gensim
