@@ -42,7 +42,7 @@ def test_calc_hist():
     print('Reading embedding')
     t = time.time()
     X = pd.read_csv(
-        '{}/models/hist_loss_karate_d8.csv'.format(PATH_TO_DUMPS),
+        '{}/models/deepwalk_BlogCatalog_d32.csv'.format(PATH_TO_DUMPS),
         delim_whitespace=True, header=None,
         skiprows=1,
         index_col=0
@@ -52,7 +52,7 @@ def test_calc_hist():
 
     print('Reading graph')
     t = time.time()
-    graph = load_karate()
+    graph = load_blog_catalog()
     nodes = graph.nodes()
     adjacency_matrix = nx.adjacency_matrix(graph, nodes).todense().astype("float32")
     print(time.time() - t)

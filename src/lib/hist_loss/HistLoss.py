@@ -38,6 +38,8 @@ class HistLoss:
         pos_samples = E_corr[pos_mask.nonzero()]
         neg_samples = E_corr[neg_mask.nonzero()]
 
+    #    pos_samples = T.printing.Print()(pos_samples)
+    #    T.printing.Print()(pos_samples.shape[0])
         if self.neg_sampling:
             neg_samples = neg_samples[self.srng.choice(
                 size=(2 * pos_samples.shape[0],),
@@ -48,6 +50,7 @@ class HistLoss:
 
         agg_pos = T.extra_ops.cumsum(pos_hist)
         loss = T.sum(T.dot(agg_pos, neg_hist))
+        loss = T.printing.Print()(loss)
         return loss
 
     # works slower but gives nonzero gradient
