@@ -9,17 +9,25 @@ from settings import PATH_TO_DUMPS
 
 import time
 
+
 def run_downhill(adj_array, N, dim):
-    hist_loss = HistLoss(N, dim=dim, neg_sampling=False)
+    hist_loss = HistLoss(N, dim=dim, neg_sampling=True)
     hist_loss.setup()
 
     def get_batch():
-        return np.random.choice(a=N, size=100), adj_array
+        batch_size = 100
+        batch_indxs = np.random.choice(a=N, size=batch_size)
+        pos_mask = adj_array[batch_indxs][:, batch_indxs]
+        pos_count = np.count_nonzero(pos_mask)
+        neg_count = batch_size * (batch_size - 1) - pos_count
+        neg_sampling_indxs = np.random.choice(a=neg_count, size=pos_count*2)
+        return batch_indxs, neg_sampling_indxs, adj_array
 
     downhill.minimize(
         hist_loss.loss,
         train=get_batch,
-        inputs=[hist_loss.batch_indxs, hist_loss.A],
+        inputs=[hist_loss.batch_indxs, hist_loss.neg_sampling_indxs, hist_loss.A],
+        params=[hist_loss.b, hist_loss.w],
         monitor_gradients=True,
         learning_rate=0.1,
         train_batches=10

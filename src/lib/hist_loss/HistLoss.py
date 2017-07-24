@@ -4,9 +4,8 @@ import theano
 from theano import tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
-
 class HistLoss:
-    def __init__(self, N, dim, bin_num=64, neg_sampling=True, seed=None):
+    def __init__(self, N, dim, bin_num=64, neg_sampling=True, seed=234):
         self.N, self.dim = N, dim
         self.bin_num = bin_num
         self.neg_sampling = neg_sampling
@@ -16,19 +15,20 @@ class HistLoss:
         self.A_batched = T.dmatrix('A_batched')
         self.pos_mask = T.dmatrix('pos_mask')
         self.batch_indxs = T.vector('batch_indxs', dtype='int64')
+        self.neg_sampling_indxs = T.vector('neg_sampling_indxs', dtype='int64')
 
         self.w = theano.shared(np.random.normal(size=(N, dim)), name='w')
         self.b = theano.shared(np.zeros((N, dim)), name='b')
         self.loss = None
 
     def setup(self):
-        self.loss = self.compile_loss(self.A, self.w, self.b, self.batch_indxs)
+        self.loss = self.compile_loss()
 
-    def compile_loss(self, A, w, b, batch_indxs):
-        A_batched = A[batch_indxs]  # shape: (batch_n, N)
-        b_batched = b[batch_indxs]  # shape: (batch_n, dim)
+    def compile_loss(self):
+        A_batched = self.A[self.batch_indxs]  # shape: (batch_n, N)
+        b_batched = self.b[self.batch_indxs]  # shape: (batch_n, dim)
 
-        E = T.dot(A_batched, w) + b_batched  # shape: (batch_n, dim)
+        E = T.dot(A_batched, self.w) + b_batched  # shape: (batch_n, dim)
         E_norm = E / E.norm(2, axis=1).reshape((E.shape[0], 1))  # shape: (batch_n, batch_n)
         E_corr = T.dot(E_norm, E_norm.T)  # shape: (batch_n, batch_n)
 
@@ -38,13 +38,9 @@ class HistLoss:
         pos_samples = E_corr[pos_mask.nonzero()]
         neg_samples = E_corr[neg_mask.nonzero()]
 
-    #    pos_samples = T.printing.Print()(pos_samples)
-    #    T.printing.Print()(pos_samples.shape[0])
         if self.neg_sampling:
-            neg_samples = neg_samples[self.srng.choice(
-                size=(2 * pos_samples.shape[0],),
-                a=neg_samples.shape[0]
-            )]
+            neg_samples = neg_samples[self.neg_sampling_indxs]
+
         pos_hist = HistLoss.calc_hist_map(pos_samples, bin_num=self.bin_num)
         neg_hist = HistLoss.calc_hist_map(neg_samples, bin_num=self.bin_num)
 
