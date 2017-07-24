@@ -67,7 +67,7 @@ class HistLoss:
             ),
             np.arange(1, bin_num + 1)
         )
-        return H / (delta * samples.shape[0])
+        return H / (delta * samples.shape[0] + 0.0001)
 
     @staticmethod
     def calc_hist(samples, bin_num=64):
@@ -76,4 +76,4 @@ class HistLoss:
         grid = T.tile(grid_row, (samples.shape[0], 1))
         samples_grid = T.tile(samples, (grid_row.shape[0], 1)).T
         dif = T.abs_(samples_grid - grid)
-        return T.sum(dif < delta, axis=0)
+        return T.sum(dif < delta, axis=0) / (2 * samples.shape[0] + 0.001)

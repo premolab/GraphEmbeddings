@@ -4,7 +4,7 @@ import networkx as nx
 import pandas as pd
 
 from lib.hist_loss.HistLoss import HistLoss
-from load_data import load_blog_catalog
+from load_data import load_blog_catalog, load_karate
 from settings import PATH_TO_DUMPS
 
 
@@ -42,7 +42,7 @@ def test_calc_hist():
     print('Reading embedding')
     t = time.time()
     X = pd.read_csv(
-        '{}/models/deepwalk_BlogCatalog_d32.csv'.format(PATH_TO_DUMPS),
+        '{}/models/hist_loss_karate_d8.csv'.format(PATH_TO_DUMPS),
         delim_whitespace=True, header=None,
         skiprows=1,
         index_col=0
@@ -52,11 +52,12 @@ def test_calc_hist():
 
     print('Reading graph')
     t = time.time()
-    graph = load_blog_catalog()
+    graph = load_karate()
     nodes = graph.nodes()
     adjacency_matrix = nx.adjacency_matrix(graph, nodes).todense().astype("float32")
     print(time.time() - t)
-
+    # adjacency_matrix = [[0, 1, 0], [1, 0, 1], [0, 1, 0]]
+    # E_input = [[1, 2, 3], [1, 3, 4], [-1, -2, -4]]
     print('Solving')
     t = time.time()
     res = f(adjacency_matrix, E_input)
