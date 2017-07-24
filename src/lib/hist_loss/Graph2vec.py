@@ -83,8 +83,12 @@ class Graph2vec:
             if self.stoc:
                 mask = self.adjacency_matrix[i, :]
                 res = np.random.permutation(np.where(mask)[1]).tolist()
-                for k in range(0, len(res), max_size - 1):
-                    yield self.get_minibatch(i, res[k:min(len(res), k + max_size - 1)] + [i])
+                yield_arr = [
+                    self.get_minibatch(i, res[k:min(len(res), k + max_size - 1)] + [i])
+                    for k in range(0, len(res), max_size - 1)
+                ]
+                for elem in yield_arr:
+                    yield elem
             else:
                 yield self.get_minibatch(i, np.arange(self.n))
 
