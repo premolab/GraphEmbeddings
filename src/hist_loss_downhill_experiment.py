@@ -51,8 +51,8 @@ class HistLoss:
                 size=(2 * pos_samples.shape[0],),
                 a=neg_samples.shape[0]
             )]
-        pos_hist = self._calc_hist_vec(pos_samples)
-        neg_hist = self._calc_hist_vec(neg_samples)
+        pos_hist = HistLoss.calc_hist(pos_samples)
+        neg_hist = HistLoss.calc_hist(neg_samples)
 
         agg_pos = T.extra_ops.cumsum(pos_hist)
         loss = T.sum(T.dot(agg_pos, neg_hist))
