@@ -75,6 +75,4 @@ class HistLoss:
         samples_grid = T.tile(samples, (grid_row.shape[0], 1)).T
         dif = T.abs_(samples_grid - grid)
         mask = dif < delta
-        mat = T.dot(mask.T, delta - dif)
-        return mat.diagonal() / (delta * samples.shape[0] + 0.0001)
-        # return T.sum(dif < delta, axis=0) / (2 * samples.shape[0] + 0.001)
+        return T.dot(mask.T, delta - dif).diagonal() / (delta * samples.shape[0] + 0.0001)
