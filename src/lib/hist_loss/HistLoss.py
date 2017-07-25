@@ -41,15 +41,14 @@ class HistLoss:
         if self.neg_sampling:
             neg_samples = neg_samples[self.neg_sampling_indxs]
 
-        pos_hist = HistLoss.calc_hist_map(pos_samples, bin_num=self.bin_num)
-        neg_hist = HistLoss.calc_hist_map(neg_samples, bin_num=self.bin_num)
+        pos_hist = HistLoss.calc_hist(pos_samples, bin_num=self.bin_num)
+        neg_hist = HistLoss.calc_hist(neg_samples, bin_num=self.bin_num)
 
         agg_pos = T.extra_ops.cumsum(pos_hist)
         loss = T.sum(T.dot(agg_pos, neg_hist))
         loss = T.printing.Print()(loss)
         return loss
 
-    # works slower but gives nonzero gradient
     @staticmethod
     def calc_hist_map(samples, bin_num=64):
         delta = 2 / (bin_num - 1)
@@ -75,4 +74,7 @@ class HistLoss:
         grid = T.tile(grid_row, (samples.shape[0], 1))
         samples_grid = T.tile(samples, (grid_row.shape[0], 1)).T
         dif = T.abs_(samples_grid - grid)
-        return T.sum(dif < delta, axis=0) / (2 * samples.shape[0] + 0.001)
+        mask = dif < delta
+        mat = T.dot(mask.T, delta - dif)
+        return mat.diagonal() / (delta * samples.shape[0] + 0.0001)
+        # return T.sum(dif < delta, axis=0) / (2 * samples.shape[0] + 0.001)

@@ -24,8 +24,8 @@ def test_calc_hist():
     # if neg_sampling:
     #     neg_samples = neg_samples[srng.choice(size=(2*pos_samples.shape[0], ), a=neg_samples.shape[0])]
 
-    pos_hist = HistLoss.calc_hist(pos_samples, bin_num=64)
-    neg_hist = HistLoss.calc_hist(neg_samples, bin_num=64)
+    pos_hist = HistLoss.calc_hist_map(pos_samples, bin_num=5)
+    neg_hist = HistLoss.calc_hist_map(neg_samples, bin_num=5)
 
     agg_pos = T.extra_ops.cumsum(pos_hist)
     loss = T.sum(T.dot(agg_pos, neg_hist))
@@ -38,26 +38,26 @@ def test_calc_hist():
         [A, E], [E_norm, E_corr, pos_mask, neg_mask, pos_samples, neg_samples, pos_hist, neg_hist, loss]
     )
     print(time.time() - t)
-
-    print('Reading embedding')
-    t = time.time()
-    X = pd.read_csv(
-        '{}/models/deepwalk_BlogCatalog_d32.csv'.format(PATH_TO_DUMPS),
-        delim_whitespace=True, header=None,
-        skiprows=1,
-        index_col=0
-    ).sort_index()
-    E_input = X.values
-    print(time.time() - t)
-
-    print('Reading graph')
-    t = time.time()
-    graph = load_blog_catalog()
-    nodes = graph.nodes()
-    adjacency_matrix = nx.adjacency_matrix(graph, nodes).todense().astype("float32")
-    print(time.time() - t)
-    # adjacency_matrix = [[0, 1, 0], [1, 0, 1], [0, 1, 0]]
-    # E_input = [[1, 2, 3], [1, 3, 4], [-1, -2, -4]]
+    #
+    # print('Reading embedding')
+    # t = time.time()
+    # X = pd.read_csv(
+    #     '{}/models/deepwalk_BlogCatalog_d32.csv'.format(PATH_TO_DUMPS),
+    #     delim_whitespace=True, header=None,
+    #     skiprows=1,
+    #     index_col=0
+    # ).sort_index()
+    # E_input = X.values
+    # print(time.time() - t)
+    #
+    # print('Reading graph')
+    # t = time.time()
+    # graph = load_blog_catalog()
+    # nodes = graph.nodes()
+    # adjacency_matrix = nx.adjacency_matrix(graph, nodes).todense().astype("float32")
+    # print(time.time() - t)
+    adjacency_matrix = [[0, 1, 1, 0], [1, 0, 0, 1], [1, 0, 0, 0], [0, 1, 0, 0]]
+    E_input = [[1, 2, 3], [2, 8, -5], [-1, -2, -4], [1, -2, 3]]
     print('Solving')
     t = time.time()
     res = f(adjacency_matrix, E_input)
