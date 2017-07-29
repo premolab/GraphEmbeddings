@@ -1,7 +1,6 @@
 from itertools import product
 
-from load_data import load_blog_catalog, load_karate, load_football, load_stars, load_polbooks, load_protein, load_email, \
-    load_amazon, load_dblp
+from load_data import *
 from transformers import transformers
 
 from settings import PATH_TO_DUMPS

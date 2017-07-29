@@ -12,7 +12,7 @@ class HistLoss:
         self.neg_sampling = neg_sampling
         self.srng = RandomStreams(seed=seed)
 
-        self.A = T.dmatrix('A')
+        # self.A = T.dmatrix('A')
         self.A_batched = T.dmatrix('A_batched')
         self.pos_mask = T.dmatrix('pos_mask')
         self.batch_indxs = T.vector('batch_indxs', dtype='int64')
@@ -26,14 +26,13 @@ class HistLoss:
         self.loss = self.compile_loss()
 
     def compile_loss(self):
-        A_batched = self.A[self.batch_indxs]  # shape: (batch_n, N)
         b_batched = self.b[self.batch_indxs]  # shape: (batch_n, dim)
 
-        E = T.dot(A_batched, self.w) + b_batched  # shape: (batch_n, dim)
+        E = T.dot(self.A_batched, self.w) + b_batched  # shape: (batch_n, dim)
         E_norm = E / E.norm(2, axis=1).reshape((E.shape[0], 1))  # shape: (batch_n, batch_n)
         E_corr = T.dot(E_norm, E_norm.T)  # shape: (batch_n, batch_n)
 
-        pos_mask = A_batched[:, self.batch_indxs]  # shape: (batch_n, batch_n)
+        pos_mask = self.A_batched[:, self.batch_indxs]  # shape: (batch_n, batch_n)
         neg_mask = 1 - pos_mask - T.eye(pos_mask.shape[0])  # shape: (batch_n, batch_n)
 
         pos_samples = E_corr[pos_mask.nonzero()]

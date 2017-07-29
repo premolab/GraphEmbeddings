@@ -13,22 +13,25 @@ from settings import PATH_TO_DUMPS
 import time
 
 
-def run_downhill(adj_array, N, dim, l, neg_sampling, batch_size, batch_count):
+def run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_count):
     hist_loss = HistLoss(N, l=l, dim=dim, neg_sampling=neg_sampling)
     hist_loss.setup()
 
     def get_batch():
         batch_indxs = np.random.choice(a=N, size=batch_size)
-        pos_mask = adj_array[batch_indxs][:, batch_indxs]
-        pos_count = np.count_nonzero(pos_mask)
+        A_batched = adjacency_matrix[batch_indxs].toarray()
+
+        pos_count = np.count_nonzero(A_batched[:, batch_indxs])
+        # pos_count = len(A_batched[:, batch_indxs].nonzero()[0])
         neg_count = batch_size * (batch_size - 1) - pos_count
         neg_sampling_indxs = np.random.choice(a=neg_count, size=pos_count*2)
-        return batch_indxs, neg_sampling_indxs, adj_array
+
+        return batch_indxs, neg_sampling_indxs, A_batched
 
     downhill.minimize(
         hist_loss.loss,
         train=get_batch,
-        inputs=[hist_loss.batch_indxs, hist_loss.neg_sampling_indxs, hist_loss.A],
+        inputs=[hist_loss.batch_indxs, hist_loss.neg_sampling_indxs, hist_loss.A_batched],
         params=[hist_loss.b, hist_loss.w],
         monitor_gradients=True,
         learning_rate=0.1,
@@ -40,23 +43,25 @@ def run_downhill(adj_array, N, dim, l, neg_sampling, batch_size, batch_count):
 if __name__ == '__main__':
     print('Reading graph')
     t = time.time()
-    dims = [2, 32, 64, 128]
+    dims = [32]
     ls = [0]
 
     neg_sampling = True
     batch_size = 100
     batch_count = 100
 
-    graph, name = load_amazon()
+    graph, name = load_email()
     nodes = graph.nodes()
-    adjacency_matrix = nx.adjacency_matrix(graph, nodes).astype('float64')
+    adjacency_matrix = nx.to_scipy_sparse_matrix(graph, nodes, format='csr')
     N = adjacency_matrix.shape[0]
-    adj_array = adjacency_matrix.toarray()
+    # adj_array = adjacency_matrix.toarray()
     print(time.time() - t)
 
     for dim, l in product(dims, ls):
-        w, b = run_downhill(adj_array, N, dim, l, neg_sampling, batch_size, batch_count)
-        E = np.dot(adj_array, w) + b
+        # w, b = run_downhill(adj_array, N, dim, l, neg_sampling, batch_size, batch_count)
+        # E = np.dot(adj_array, w) + b
+        w, b = run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_count)
+        E = np.dot(adjacency_matrix, w) + b
         E_norm = E / np.linalg.norm(E, axis=1).reshape((E.shape[0], 1))
         if l != 0:
             filename = '{}/models/hist_loss_l{}_{}_d{}.csv'\
