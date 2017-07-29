@@ -22,8 +22,8 @@ class Node2VecTransformer(BaseTransformer):
         self.path_to_dumps = path_to_dumps
 
     def get_dump_model_filename(self):
-        return '{}/models/n2v_{}_p{}_q{}_d{}.csv'.format(
-            self.path_to_dumps, self.name, self.p, self.q, self.d
+        return '{}/models/n2v_p{}_q{}_{}_d{}.csv'.format(
+            self.path_to_dumps, self.p, self.q, self.name, self.d
         )
 
     def args(self, output):

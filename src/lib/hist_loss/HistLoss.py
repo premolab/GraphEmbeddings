@@ -5,8 +5,9 @@ from theano import tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
 class HistLoss:
-    def __init__(self, N, dim, bin_num=64, neg_sampling=True, seed=234):
+    def __init__(self, N, dim, l=0, bin_num=64, neg_sampling=True, seed=234):
         self.N, self.dim = N, dim
+        self.l = l
         self.bin_num = bin_num
         self.neg_sampling = neg_sampling
         self.srng = RandomStreams(seed=seed)
@@ -45,8 +46,7 @@ class HistLoss:
         neg_hist = HistLoss.calc_hist(neg_samples, bin_num=self.bin_num)
 
         agg_pos = T.extra_ops.cumsum(pos_hist)
-        loss = T.sum(T.dot(agg_pos, neg_hist))
-        loss = T.printing.Print()(loss)
+        loss = T.sum(T.dot(agg_pos, neg_hist)) - self.l * T.sum(pos_samples)
         return loss
 
     @staticmethod
