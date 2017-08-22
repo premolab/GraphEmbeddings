@@ -13,3 +13,9 @@
 Спуск можно остановить при помощи `Ctrl-c`.
 
 Чтобы понять что вообще там происходит, можно почитать доки библиотеки downhill.
+
+Теано и лазанью желательно устанавливать девелоперские версии
+```
+pip install --upgrade https://github.com/Theano/Theano/archive/master.zip
+pip install --upgrade https://github.com/Lasagne/Lasagne/archive/master.zip
+```
