@@ -6,8 +6,7 @@ import pickle
 from itertools import product
 
 from lib.hist_loss.HistLoss import HistLoss
-from load_data import load_blog_catalog, load_karate, load_football, load_stars, load_polbooks, load_protein, load_email, \
-    load_amazon
+from load_data import *
 from settings import PATH_TO_DUMPS
 
 import time
@@ -18,13 +17,13 @@ def run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_co
     hist_loss.setup()
 
     def get_batch():
-        batch_indxs = np.random.choice(a=N, size=batch_size)
+        batch_indxs = np.random.choice(a=N, size=batch_size).astype('int32')
         A_batched = adjacency_matrix[batch_indxs].toarray()
 
         pos_count = np.count_nonzero(A_batched[:, batch_indxs])
         # pos_count = len(A_batched[:, batch_indxs].nonzero()[0])
         neg_count = batch_size * (batch_size - 1) - pos_count
-        neg_sampling_indxs = np.random.choice(a=neg_count, size=pos_count*2)
+        neg_sampling_indxs = np.random.choice(a=neg_count, size=pos_count*2).astype('int32')
 
         return batch_indxs, neg_sampling_indxs, A_batched
 
@@ -50,7 +49,7 @@ if __name__ == '__main__':
     batch_size = 100
     batch_count = 100
 
-    graph, name = load_email()
+    graph, name = load_karate()
     nodes = graph.nodes()
     adjacency_matrix = nx.to_scipy_sparse_matrix(graph, nodes, format='csr')
     N = adjacency_matrix.shape[0]

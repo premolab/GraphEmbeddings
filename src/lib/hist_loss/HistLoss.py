@@ -4,19 +4,19 @@ import theano
 from theano import tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
+
 class HistLoss:
     def __init__(self, N, dim, l=0, bin_num=64, neg_sampling=True, seed=234):
         self.N, self.dim = N, dim
         self.l = l
         self.bin_num = bin_num
         self.neg_sampling = neg_sampling
-        self.srng = RandomStreams(seed=seed)
 
         # self.A = T.dmatrix('A')
         self.A_batched = T.dmatrix('A_batched')
         self.pos_mask = T.dmatrix('pos_mask')
-        self.batch_indxs = T.vector('batch_indxs', dtype='int64')
-        self.neg_sampling_indxs = T.vector('neg_sampling_indxs', dtype='int64')
+        self.batch_indxs = T.vector('batch_indxs', dtype='int32')
+        self.neg_sampling_indxs = T.vector('neg_sampling_indxs', dtype='int32')
 
         self.w = theano.shared(np.random.normal(size=(N, dim)), name='w')
         self.b = theano.shared(np.zeros((N, dim)), name='b')
