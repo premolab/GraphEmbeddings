@@ -2,7 +2,6 @@ import numpy as np
 
 import theano
 from theano import tensor as T
-from theano.tensor.shared_randomstreams import RandomStreams
 
 
 class HistLoss:
@@ -12,7 +11,6 @@ class HistLoss:
         self.bin_num = bin_num
         self.neg_sampling = neg_sampling
 
-        # self.A = T.dmatrix('A')
         self.A_batched = T.dmatrix('A_batched')
         self.pos_mask = T.dmatrix('pos_mask')
         self.batch_indxs = T.vector('batch_indxs', dtype='int32')
@@ -50,6 +48,7 @@ class HistLoss:
 
     @staticmethod
     def calc_hist_map(samples, bin_num=64):
+        """Медленный вариант"""
         delta = 2 / (bin_num - 1)
         # ts =  -1 + delta * T.arange(bin_num)
         rs = T.floor((samples + 1) / delta) + 1  # r is natural index
@@ -68,6 +67,7 @@ class HistLoss:
 
     @staticmethod
     def calc_hist(samples, bin_num=64):
+        """Строит гистограмму с треугольным ядром, формула есть в статье"""
         delta = 2 / (bin_num - 1)
         grid_row = T.arange(-1, 1 + delta, delta)
         grid = T.tile(grid_row, (samples.shape[0], 1))

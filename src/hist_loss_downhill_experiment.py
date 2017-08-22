@@ -12,14 +12,16 @@ from settings import PATH_TO_DUMPS
 import time
 
 
-def run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_count):
+def run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_count, sparse):
     hist_loss = HistLoss(N, l=l, dim=dim, neg_sampling=neg_sampling)
     hist_loss.setup()
 
     def get_batch():
         batch_indxs = np.random.choice(a=N, size=batch_size).astype('int32')
-        A_batched = adjacency_matrix[batch_indxs].toarray()
-
+        if sparse:
+            A_batched = adjacency_matrix[batch_indxs].toarray()
+        else:
+            A_batched = adjacency_matrix[batch_indxs]
         pos_count = np.count_nonzero(A_batched[:, batch_indxs])
         # pos_count = len(A_batched[:, batch_indxs].nonzero()[0])
         neg_count = batch_size * (batch_size - 1) - pos_count
@@ -49,24 +51,31 @@ if __name__ == '__main__':
     batch_size = 100
     batch_count = 100
 
+    sparse = False
+
     graph, name = load_karate()
     nodes = graph.nodes()
     adjacency_matrix = nx.to_scipy_sparse_matrix(graph, nodes, format='csr')
     N = adjacency_matrix.shape[0]
-    # adj_array = adjacency_matrix.toarray()
+    if not sparse:
+        adj_array = adjacency_matrix.toarray()
     print(time.time() - t)
 
     for dim, l in product(dims, ls):
-        # w, b = run_downhill(adj_array, N, dim, l, neg_sampling, batch_size, batch_count)
-        # E = np.dot(adj_array, w) + b
-        w, b = run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_count)
-        E = np.dot(adjacency_matrix, w) + b
+        if not sparse:
+            w, b = run_downhill(
+                adj_array, N, dim, l, neg_sampling, batch_size, batch_count, sparse)
+            E = np.dot(adj_array, w) + b
+        else:
+            w, b = run_downhill(
+                adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_count, sparse)
+            E = np.dot(adjacency_matrix, w) + b
         E_norm = E / np.linalg.norm(E, axis=1).reshape((E.shape[0], 1))
         if l != 0:
-            filename = '{}/models/hist_loss_l{}_{}_d{}.csv'\
+            filename = '{}/models/hist_loss_l{}_{}_d{}.csv' \
                 .format(PATH_TO_DUMPS, l, name, dim)
         else:
-            filename = '{}/models/hist_loss_{}_d{}.csv'\
+            filename = '{}/models/hist_loss_{}_d{}.csv' \
                 .format(PATH_TO_DUMPS, name, dim)
         print('Saving results to {}'.format(filename))
         with open(filename, 'w') as file:
