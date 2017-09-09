@@ -5,7 +5,7 @@ from theano import tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
 
-class HistLoss:
+class HistLossWeighted:
     def __init__(self, N, dim, l=0, bin_num=64, neg_sampling=True, seed=234):
         self.N, self.dim = N, dim
         self.l = l
@@ -32,47 +32,33 @@ class HistLoss:
         E = T.dot(self.A_batched, self.w) + b_batched  # shape: (batch_n, dim)
         E_norm = E / E.norm(2, axis=1).reshape((E.shape[0], 1))  # shape: (batch_n, batch_n)
         E_corr = T.dot(E_norm, E_norm.T)  # shape: (batch_n, batch_n)
+        # E_corr = theano.printing.Print('E_corr')(E_corr)
 
-        pos_mask = self.A_batched[:, self.batch_indxs]  # shape: (batch_n, batch_n)
-        neg_mask = 1 - pos_mask - T.eye(pos_mask.shape[0])  # shape: (batch_n, batch_n)
+        samples = E_corr.flatten()
+        weights_matrix = self.A_batched[:, self.batch_indxs]
+        pos_weights = weights_matrix.flatten()
+        neg_weights = (1 - weights_matrix - T.eye(weights_matrix.shape[0])).flatten()
+        # pos_weights = theano.printing.Print('pos_weights')(pos_weights)
+        # neg_weights = theano.printing.Print('neg_weights')(neg_weights)
 
-        pos_samples = E_corr[pos_mask.nonzero()]
-        neg_samples = E_corr[neg_mask.nonzero()]
-
-        if self.neg_sampling:
-            neg_samples = neg_samples[self.neg_sampling_indxs]
-
-        pos_hist = HistLoss.calc_hist(pos_samples, bin_num=self.bin_num)
-        neg_hist = HistLoss.calc_hist(neg_samples, bin_num=self.bin_num)
+        pos_hist = HistLossWeighted.calc_hist_weighted(samples, pos_weights, bin_num=self.bin_num)
+        neg_hist = HistLossWeighted.calc_hist_weighted(samples, neg_weights, bin_num=self.bin_num)
+        # pos_hist = theano.printing.Print('pos_hist')(pos_hist)
+        # neg_hist = theano.printing.Print('neg_hist')(neg_hist)
 
         agg_pos = T.extra_ops.cumsum(pos_hist)
-        loss = T.sum(T.dot(agg_pos, neg_hist)) - self.l * T.sum(pos_samples)
+        loss = T.sum(T.dot(agg_pos, neg_hist))
         return loss
 
     @staticmethod
-    def calc_hist_map(samples, bin_num=64):
-        delta = 2 / (bin_num - 1)
-        # ts =  -1 + delta * T.arange(bin_num)
-        rs = T.floor((samples + 1) / delta) + 1  # r is natural index
-        ts = -1 + delta * (rs - 1)  # t_r is value between -1 and 1
-        samples_sub_t_prev = samples - ts
-        t_next_sub_samples = delta - samples_sub_t_prev
-
-        H, _ = theano.map(
-            lambda r: (
-                T.sum(samples_sub_t_prev[T.eq(rs, r).nonzero()]) +
-                T.sum(t_next_sub_samples[T.eq(rs - 1, r).nonzero()])
-            ),
-            np.arange(1, bin_num + 1)
-        )
-        return H / (delta * samples.shape[0] + 0.0001)
-
-    @staticmethod
-    def calc_hist(samples, bin_num=64):
+    def calc_hist_weighted(samples, weights, bin_num=64):
         delta = 2 / (bin_num - 1)
         grid_row = T.arange(-1, 1 + delta, delta)
         grid = T.tile(grid_row, (samples.shape[0], 1))
         samples_grid = T.tile(samples, (grid_row.shape[0], 1)).T
         dif = T.abs_(samples_grid - grid)
         mask = dif < delta
-        return T.dot(mask.T, delta - dif).diagonal() / (delta * samples.shape[0] + 0.0001)
+        # mask = theano.printing.Print('mask')(mask)
+        hist = T.dot(mask.T * weights, delta - dif).diagonal()
+        return hist / hist.sum()
+        # return T.dot(theano.printing.Print('weighted_mask')(mask.T * weights), delta - dif).diagonal() / (delta * samples.shape[0] + 0.0001)

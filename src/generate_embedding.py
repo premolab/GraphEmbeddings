@@ -20,11 +20,11 @@ if __name__ == '__main__':
     # 'stoc_hist', 'node2vec', 'stoc_opt', 'stocsk_opt',
     # 'bigclam', 'gamma', 'deepwalk', 'svd', 'nmf'
     methods = ['deepwalk', 'node2vec']
-    dimensions = [2, 32, 64, 128]
-    graph, name = load_amazon(weighted=True)
+    dimensions = [2, 4, 8, 16]
+    graph, name = load_karate(weighted=True)
     for method, dimension in product(methods, dimensions):
         generate_embedding(graph, method, dimension, name)
 
-    graph, name = load_dblp(weighted=True)
-    for method, dimension in product(methods, dimensions):
-        generate_embedding(graph, method, dimension, name)
+    # graph, name = load_dblp(weighted=True)
+    # for method, dimension in product(methods, dimensions):
+    #     generate_embedding(graph, method, dimension, name)
