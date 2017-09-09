@@ -34,7 +34,6 @@ def run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_co
         else:
             neg_sampling_indxs = np.random.choice(a=neg_count,
                                               size=pos_count*2).astype('int32')
-
         return (
             batch_indxs,
             # neg_sampling_indxs,
