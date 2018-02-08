@@ -20,8 +20,9 @@ if __name__ == '__main__':
     # 'stoc_hist', 'node2vec', 'stoc_opt', 'stocsk_opt',
     # 'bigclam', 'gamma', 'deepwalk', 'svd', 'nmf'
     methods = ['deepwalk', 'node2vec']
-    dimensions = [2, 4, 8, 16]
-    graph, name = load_karate(weighted=True)
+    dimensions = [3, 4, 5, 6, 7, 8, 12, 16, 24, 32, 64, 128]
+    # graph, name = generate_sbm([300, 300, 300], 0.1, 0.01, 43, weighted=True)
+    graph, name = load_email(weighted=True)
     for method, dimension in product(methods, dimensions):
         generate_embedding(graph, method, dimension, name)
 

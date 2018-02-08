@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="Copy of project-level server 'iitp gpu'" showNewOnTargetInSync="false">
+    <serverData>
+      <paths name="Copy of project-level server 'iitp gpu'">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/GraphEmbeddings" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/BlogCatalog-dataset" />
+            <excludedPath local="true" path="$PROJECT_DIR$/cluster-datasets" />
+            <excludedPath local="true" path="$PROJECT_DIR$/Karate-dataset" />
+            <excludedPath local="true" path="$PROJECT_DIR$/dumps" />
+            <excludedPath local="true" path="$PROJECT_DIR$/Kostya" />
+            <excludedPath local="true" path="$PROJECT_DIR$/src/settings.py" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>

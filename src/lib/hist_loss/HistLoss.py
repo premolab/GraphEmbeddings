@@ -4,7 +4,6 @@ import theano
 from theano import tensor as T
 
 
-
 class HistLoss:
     def __init__(self, N, dim, l=0, bin_num=64, neg_sampling=True, seed=234):
         self.N, self.dim = N, dim

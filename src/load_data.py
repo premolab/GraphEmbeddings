@@ -1,6 +1,7 @@
 import networkx as nx
-from settings import PATH_TO_BLOG_CATALOG, PATH_TO_KARATE, PATH_TO_FOOTBALL, PATH_TO_STARS, PATH_TO_POLBOOKS, \
-    PATH_TO_PROTEIN, PATH_TO_EMAIL, PATH_TO_AMAZON
+import numpy as np
+from settings import *
+import parse
 
 
 def read_graph(input_filepath, directed=False):
@@ -110,5 +111,26 @@ def load_dblp(weighted=False):
     return G, 'DBLP'
 
 
+def generate_sbm(sizes, p_in: float, p_out: float, seed, weighted=False):
+    G = nx.random_partition_graph(sizes, p_in, p_out, seed)
+    if weighted:
+        for edge in G.edges():
+            G[edge[0]][edge[1]]['weight'] = 1
+    return G, 'SBM_sizes_{}_p_in_{}_p_out_{}_seed_{}'.format(
+               '_'.join(str(x) for x in sizes),
+               p_in, p_out, seed
+           )
+
+
+def generate_sbm_partition(name: str):
+    sizes, p_in, p_out, seed = parse.parse('SBM_sizes_{}_p_in_{}_p_out_{}_seed_{}', name)
+    return nx.random_partition_graph(
+        [int(x) for x in sizes.split('_')],
+        float(p_in),
+        float(p_out),
+        int(seed)
+    ).graph['partition']
+
+
 if __name__ == '__main__':
-    print(len(load_protein()[0]))
+    print(generate_sbm_partition('SBM_sizes_100_100_100_p_in_0.1_p_out_0.01_seed_43'))
