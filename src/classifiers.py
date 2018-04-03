@@ -3,20 +3,23 @@ import numpy as np
 
 
 class MultilabelOVRClassifier(OneVsRestClassifier):
-    @classmethod
-    def set_labels(cls, X_indexes, y):
-        cls.label_count = len(y[0])
-        cls.y_label_count = np.array([sum(raw) for raw in y])
-        cls.X_index_dict = dict(zip(X_indexes, range(len(y))))
+    def __init__(self, estimator, n_jobs):
+        super(MultilabelOVRClassifier, self).__init__(estimator, n_jobs)
+        self.label_count = None
+        self.y_label_count = None
+        self.X_index_dict = None
+
+    def set_labels(self, X_indexes, y):
+        self.label_count = y.shape[0]
+        self.y_label_count = y.sum(axis=1).astype(np.int)
+        self.X_index_dict = dict(zip(X_indexes, range(len(y))))
 
     def predict(self, X):
         pred_probas = self.predict_proba(X)
-        res = np.zeros((len(pred_probas), self.label_count))
+        res = np.zeros_like(pred_probas)
         for i, index in enumerate(X.index.values):
             y_index = self.X_index_dict[index]
             label_count = self.y_label_count[y_index]
-            i_pred_probas = pred_probas[i]
-            best_indexes = np.argsort(i_pred_probas)[-label_count:]
-            for j in best_indexes:
-                res[i][j] = 1
+            best_indexes = np.argsort(pred_probas[i])[-label_count:]
+            res[i, best_indexes] = 1
         return res

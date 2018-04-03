@@ -2,6 +2,9 @@ import downhill
 import networkx as nx
 import pickle
 
+from keras.models import Sequential
+from keras.layers import Dense, Activation
+
 from itertools import product
 
 from lib.hist_loss.HistLoss import HistLoss
@@ -12,6 +15,17 @@ from settings import *
 import numpy as np
 import time
 
+
+def run_keras(adjacency_matrix, N, dim, l, neg_sampling):
+    hist_loss = HistLoss(N, l=l, dim=dim, neg_sampling=neg_sampling)
+    hist_loss.setup()
+
+    model = Sequential([
+        Dense(N, input_shape=(N,)),
+        Activation('relu'),
+        Dense(N),
+        Activation('softmax')
+    ])
 
 def run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_count, detail=False):
     hist_loss = HistLoss(N, l=l, dim=dim, neg_sampling=neg_sampling)
@@ -87,15 +101,14 @@ def run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_co
 if __name__ == '__main__':
     print('Reading graph')
     t = time.time()
-    dims = [3, 4, 5, 6, 7, 8]
+    dims = [128]
     ls = [0]
 
     neg_sampling = True
     batch_size = 100
     batch_count = 10
 
-    # graph, name = generate_sbm([300, 300, 300], 0.1, 0.01, 43)
-    graph, name = load_email()
+    graph, name = generate_sbm([100, 100, 100], 0.1, 0.01, 43)
     nodes = graph.nodes()
     adjacency_matrix_sparse = nx.to_scipy_sparse_matrix(graph, nodes, format='csr')
     N = adjacency_matrix_sparse.shape[0]
@@ -109,7 +122,7 @@ if __name__ == '__main__':
         print(("Generating embedding with method=hist_loss, dim={}, " +
               "dataset={}, batch_size={}, batch_count={}")
               .format(dim, name, batch_size, batch_count))
-        w, b = run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_count)
+        w, b = run_keras()
         E = np.dot(adjacency_matrix, w) + b
         E_norm = E / np.linalg.norm(E, axis=1).reshape((E.shape[0], 1))
         filename = '{}/models/hist_loss'.format(PATH_TO_DUMPS)

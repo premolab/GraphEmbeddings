@@ -1,7 +1,13 @@
+import scipy.io
+from collections import namedtuple
+
 import networkx as nx
 import numpy as np
-from settings import *
+from src.settings import *
 import parse
+
+
+GraphInfo = namedtuple('GraphInfo', ['graph', 'name'])
 
 
 def read_graph(input_filepath, directed=False):
@@ -36,10 +42,11 @@ def load_blog_catalog(weighted=False):
     G = nx.read_edgelist(
         '{}/data/edges.csv'.format(PATH_TO_BLOG_CATALOG), nodetype=int
     )
+
     if weighted:
         for edge in G.edges():
             G[edge[0]][edge[1]]['weight'] = 1
-    return G, 'BlogCatalog'
+    return GraphInfo(G, 'BlogCatalog')
 
 
 def load_karate(weighted=False):
@@ -48,7 +55,11 @@ def load_karate(weighted=False):
     if weighted:
         for edge in G.edges():
             G[edge[0]][edge[1]]['weight'] = 1
-    return G, 'Karate'
+    return GraphInfo(G, 'Karate')
+
+
+def load_wikipedia(weighted=False):
+    mat = scipy.io.loadmat('{}/POS.mat')
 
 
 def load_football(weighted=False):
@@ -57,7 +68,7 @@ def load_football(weighted=False):
     if weighted:
         for edge in G.edges():
             G[edge[0]][edge[1]]['weight'] = 1
-    return G, 'Football'
+    return GraphInfo(G, 'Football')
 
 
 def load_stars(weighted=False):
@@ -66,7 +77,7 @@ def load_stars(weighted=False):
     if weighted:
         for edge in G.edges():
             G[edge[0]][edge[1]]['weight'] = 1
-    return G, 'Stars'
+    return GraphInfo(G, 'Stars')
 
 
 def load_polbooks(weighted=False):
@@ -75,7 +86,7 @@ def load_polbooks(weighted=False):
     if weighted:
         for edge in G.edges():
             G[edge[0]][edge[1]]['weight'] = 1
-    return G, 'PolBooks'
+    return GraphInfo(G, 'PolBooks')
 
 
 def load_protein():
@@ -90,7 +101,7 @@ def load_email(weighted=False):
     if weighted:
         for edge in G.edges():
             G[edge[0]][edge[1]]['weight'] = 1
-    return G, 'Email'
+    return GraphInfo(G, 'Email')
 
 
 def load_amazon(weighted=False):
@@ -99,7 +110,7 @@ def load_amazon(weighted=False):
     if weighted:
         for edge in G.edges():
             G[edge[0]][edge[1]]['weight'] = 1
-    return G, 'Amazon'
+    return GraphInfo(G, 'Amazon')
 
 
 def load_dblp(weighted=False):
@@ -108,7 +119,7 @@ def load_dblp(weighted=False):
     if weighted:
         for edge in G.edges():
             G[edge[0]][edge[1]]['weight'] = 1
-    return G, 'DBLP'
+    return GraphInfo(G, 'DBLP')
 
 
 def generate_sbm(sizes, p_in: float, p_out: float, seed, weighted=False):
@@ -116,10 +127,10 @@ def generate_sbm(sizes, p_in: float, p_out: float, seed, weighted=False):
     if weighted:
         for edge in G.edges():
             G[edge[0]][edge[1]]['weight'] = 1
-    return G, 'SBM_sizes_{}_p_in_{}_p_out_{}_seed_{}'.format(
+    return GraphInfo(G, 'SBM_sizes_{}_p_in_{}_p_out_{}_seed_{}'.format(
                '_'.join(str(x) for x in sizes),
                p_in, p_out, seed
-           )
+           ))
 
 
 def generate_sbm_partition(name: str):
@@ -130,7 +141,3 @@ def generate_sbm_partition(name: str):
         float(p_out),
         int(seed)
     ).graph['partition']
-
-
-if __name__ == '__main__':
-    print(generate_sbm_partition('SBM_sizes_100_100_100_p_in_0.1_p_out_0.01_seed_43'))

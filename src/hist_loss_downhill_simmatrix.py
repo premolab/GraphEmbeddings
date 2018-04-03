@@ -5,21 +5,28 @@ import pickle
 from itertools import product
 
 from lib.hist_loss.HistLoss import HistLoss
-from lib.hist_loss.HistLossWeighted import HistLossWeighted
 from load_data import *
 from settings import *
 
 import numpy as np
-import time
 
 
-def run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_count, detail=False):
+def run_downhill(
+        A=None,
+        dim=128,
+        l=0,
+        neg_sampling=False,
+        batch_size=100,
+        batch_count=10,
+        detail=False
+):
+    N = A.shape[0]
     hist_loss = HistLoss(N, l=l, dim=dim, neg_sampling=neg_sampling)
     hist_loss.setup()
 
     def get_batch():
         batch_indxs = np.random.choice(a=N, size=batch_size).astype('int32')
-        A_batched = adjacency_matrix[batch_indxs].astype('float32')
+        A_batched = A[batch_indxs].astype('float32')
 
         pos_count = np.count_nonzero(A_batched[:, batch_indxs])
         # pos_count = len(A_batched[:, batch_indxs].nonzero()[0])
@@ -28,32 +35,15 @@ def run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_co
                                               size=pos_count*2).astype('int32')
         return (
             batch_indxs,
-            neg_sampling_indxs,
+            # neg_sampling_indxs,
             A_batched
         )
 
-    # downhill.minimize(
-    #     hist_loss.loss,
-    #     algo='adagrad',
-    #     train=get_batch,
-    #     inputs=[
-    #         hist_loss.batch_indxs,
-    #         hist_loss.neg_sampling_indxs,
-    #         hist_loss.A_batched
-    #     ],
-    #     params=[hist_loss.b, hist_loss.w],
-    #     monitors=[('aaa', hist_loss.b[0][0])],
-    #     monitor_gradients=True,
-    #     learning_rate=0.01,
-    #     train_batches=batch_count,
-    #     valid_batches=batch_count*2,
-    #     patience=5
-    # )
     opt = downhill.build(algo='adagrad',
                          loss=hist_loss.loss,
                          inputs=[
                              hist_loss.batch_indxs,
-                             hist_loss.neg_sampling_indxs,
+                             # hist_loss.neg_sampling_indxs,
                              hist_loss.A_batched
                          ],
                          params=[hist_loss.b, hist_loss.w],
@@ -64,12 +54,14 @@ def run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_co
         name='train',
     )
 
-    for i, _ in enumerate(opt.iterate(train=train,
-                                  patience=5,
-                                  learning_rate=0.01)):
+    for i, _ in enumerate(opt.iterate(
+            train=train,
+            patience=5,
+            learning_rate=0.01
+    )):
         if detail:
             w, b = hist_loss.w.get_value(), hist_loss.b.get_value()
-            E = np.dot(adjacency_matrix, w) + b
+            E = np.dot(A, w) + b
             E_norm = E / np.linalg.norm(E, axis=1).reshape((E.shape[0], 1))
             filename = '{}/models/d3/{}'.format(PATH_TO_DUMPS, i)
             if l != 0:
@@ -86,35 +78,26 @@ def run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_co
 
 if __name__ == '__main__':
     print('Reading graph')
-    t = time.time()
-    dims = [3, 4, 5, 6, 7, 8]
-    ls = [0]
-
-    neg_sampling = True
-    batch_size = 100
-    batch_count = 10
+    dims = [3, 4, 5, 6, 7, 8, 12, 16, 24, 32, 64, 128]
 
     # graph, name = generate_sbm([300, 300, 300], 0.1, 0.01, 43)
     graph, name = load_email()
-    nodes = graph.nodes()
-    adjacency_matrix_sparse = nx.to_scipy_sparse_matrix(graph, nodes, format='csr')
-    N = adjacency_matrix_sparse.shape[0]
-    print(time.time() - t)
-    adjacency_matrix = adjacency_matrix_sparse.toarray()
+    A = nx.adjacency_matrix(graph).toarray()
+    N = A.shape[0]
+    D = np.zeros(A.shape)
+    for i in range(A.shape[0]):
+        D[i, i] = np.sum(A[i])
 
-    print(time.time() - t)
-    print(adjacency_matrix[:5, :5])
+    S = np.dot(np.linalg.inv(D), np.dot(A, A))
 
-    for dim, l in product(dims, ls):
-        print(("Generating embedding with method=hist_loss, dim={}, " +
-              "dataset={}, batch_size={}, batch_count={}")
-              .format(dim, name, batch_size, batch_count))
-        w, b = run_downhill(adjacency_matrix, N, dim, l, neg_sampling, batch_size, batch_count)
-        E = np.dot(adjacency_matrix, w) + b
+    print(S[:5, :5])
+
+    for dim, in product(dims,):
+        print("Generating embedding with method=hist_loss, dim={}, dataset={}".format(dim, name))
+        w, b = run_downhill(A=S, dim=dim)
+        E = np.dot(S, w) + b
         E_norm = E / np.linalg.norm(E, axis=1).reshape((E.shape[0], 1))
-        filename = '{}/models/hist_loss'.format(PATH_TO_DUMPS)
-        if l != 0:
-            filename += '_l{}'.format(l)
+        filename = '{}/models/hist_loss_sim'.format(PATH_TO_DUMPS)
         filename += '_{}_d{}.csv'.format(name, dim)
         print('Saving results to {}'.format(filename))
         with open(filename, 'w') as file:
