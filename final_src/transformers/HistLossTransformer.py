@@ -31,28 +31,24 @@ class HistLossTransformer:
         self.should_stop = should_stop
 
     def fit(self):
+        path = path_to_embedding(
+            root=self.path_to_dumps,
+            method='hist_loss_' + str(self.hist_loss_configuration),
+            name=self.graph_name,
+            dim=self.dim
+        )
         if self.use_cached:
-            path = path_to_embedding(
-                root=self.path_to_dumps,
-                method=self.hist_loss_configuration,
-                name=self.graph_name,
-                dim=self.dim
-            )
             if Path(path).exists():
                 E = read_embedding(path)
-                print("Loaded cached from " + path)
+                print("Loaded cached embedding from " + path)
                 return E
 
         E = self.run(
             should_stop=self.should_stop
         )
         save_embedding(
-            path_to_embedding(
-                root=self.path_to_dumps,
-                method='hist_loss_' + str(self.hist_loss_configuration),
-                name=self.graph_name,
-                dim=self.dim
-            ), E=np.array(E)
+            path,
+            E=np.array(E)
         )
 
     @staticmethod
@@ -145,7 +141,7 @@ class HistLossTransformer:
                 samples = tf.boolean_mask(E_corr, mask=neg_mask)
                 tf.summary.histogram("neg_samples", samples)
                 return samples
-            elif method == 'IGNORE_NEG':
+            elif method == 'IGNORE-NEG':
                 neg_mask = HistLossTransformer.get_neg_mask(S)
                 samples = tf.boolean_mask(E_corr, mask=neg_mask)
                 tf.summary.histogram("neg_samples", samples)

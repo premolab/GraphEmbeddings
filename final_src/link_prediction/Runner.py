@@ -23,6 +23,7 @@ def should_stop():
 def run(run_configuration: RunConfiguration, path_to_dumps, ratio=0.5, seed=43):
     graph = load_graph(run_configuration.graph_name)
     edges = graph.edges()
+    nodes = graph.nodes()
 
     path = Path(PATH_TO_LINK_PREDICTION_DATASETS) / run_configuration.graph_name / "train.edgelist"
 
@@ -36,6 +37,7 @@ def run(run_configuration: RunConfiguration, path_to_dumps, ratio=0.5, seed=43):
         )
     else:
         train_graph = read_graph2(str(path))
+        print("Loaded cached graph partition from " + str(path))
 
     E = calc_embedding(
         run_configuration.method,
@@ -43,11 +45,11 @@ def run(run_configuration: RunConfiguration, path_to_dumps, ratio=0.5, seed=43):
         run_configuration.graph_name + '-lp-{}-{}'.format(ratio, seed),
         run_configuration.dimension,
         path_to_dumps,
+        use_cached=True,
         should_stop=should_stop
     )
 
     train_edges = train_graph.edges()
-
     edges_set = set(edges)
     train_edges_set = set(train_edges)
 
@@ -56,14 +58,14 @@ def run(run_configuration: RunConfiguration, path_to_dumps, ratio=0.5, seed=43):
     np.random.seed(seed)
     test_neg_edges_set = set()
     while len(test_neg_edges_set) < len(test_edges_set):
-        edge = (np.random.randint(0, len(graph.nodes())), np.random.randint(0, len(graph.nodes())))
+        edge = np.random.choice(nodes), np.random.choice(nodes)
         if edge not in edges_set:
             test_neg_edges_set.add(edge)
     assert len(test_neg_edges_set & edges_set) == 0
 
     train_neg_edges_set = set()
     while len(train_neg_edges_set) < len(train_edges_set):
-        edge = (np.random.randint(0, len(graph.nodes())), np.random.randint(0, len(graph.nodes())))
+        edge = np.random.choice(nodes), np.random.choice(nodes)
         if edge not in train_edges_set:
             train_neg_edges_set.add(edge)
     assert len(train_neg_edges_set & train_edges_set) == 0
@@ -72,5 +74,4 @@ def run(run_configuration: RunConfiguration, path_to_dumps, ratio=0.5, seed=43):
                                         train_edges,
                                         list(train_neg_edges_set),
                                         list(test_edges_set),
-                                        list(test_neg_edges_set),
-                                        indexing_offset=1)
+                                        list(test_neg_edges_set))

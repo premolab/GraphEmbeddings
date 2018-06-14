@@ -36,7 +36,7 @@ def read_graph(path, directed=False):
 
 
 def read_graph2(path):
-    return nx.read_edgelist(path)
+    return nx.read_edgelist(path, nodetype=int)
 
 
 def save_graph(graph: nx.Graph, path):

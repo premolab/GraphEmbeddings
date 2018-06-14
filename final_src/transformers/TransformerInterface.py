@@ -42,7 +42,7 @@ class TransformerInterface(BaseEstimator, TransformerMixin):
                 if os.path.exists(dump_name):
                     self.load_model(dump_name)
                     self.fitted = True
-                    print("Loaded cached from " + dump_name)
+                    print("Loaded cached embedding from " + dump_name)
                     return self
             except Exception as e:
                 e.args += [dump_name]

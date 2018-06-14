@@ -14,7 +14,7 @@ if __name__ == '__main__':
     simmatrix_methods = ['ID', 'ADA']
     loss_methods = ['ASIM']
     calc_pos_methods = ['NORMAL', 'WEIGHTED']
-    calc_neg_methods = ['NORMAL', 'WEIGHTED', 'IGNORE_NEG']
+    calc_neg_methods = ['NORMAL', 'WEIGHTED', 'IGNORE-NEG']
     calc_hist_methods = ['NORMAL']
     batch_sizes = [400]
 
@@ -31,7 +31,7 @@ if __name__ == '__main__':
                                 calc_neg_methods,
                                 calc_hist_methods,
                                 batch_sizes):
-        if calc_neg_method != calc_pos_method:
+        if (calc_neg_method == 'WEIGHTED') ^ (calc_pos_method == 'WEIGHTED'):
             continue
         methods += ['hist_loss_' +
                     str(HistLossConfiguration(metric,
@@ -43,7 +43,7 @@ if __name__ == '__main__':
                                               batch_size))]
     methods += ['deepwalk']
     dimensions = [4, 8, 16, 32]
-    names = ['facebook', 'football', 'polbooks']
+    names = ['football', 'polbooks', 'facebook']
 
     for (method, name, dim) in product(methods, names, dimensions):
         print(method, name, dim)
