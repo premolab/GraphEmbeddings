@@ -250,7 +250,7 @@ class HistLossTransformer:
             prev_loss = 0
             patience_counter = 0
 
-            for epoch in range(400):
+            for epoch in range(600):
                 batch_indxs = np.random.choice(a=N, size=batch_size).astype('int32')
                 A_batched = A[batch_indxs]
                 pos_count = np.count_nonzero(A_batched[:, batch_indxs])

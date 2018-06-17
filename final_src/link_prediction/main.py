@@ -42,8 +42,8 @@ if __name__ == '__main__':
                                               calc_hist_method,
                                               batch_size))]
     methods += ['deepwalk']
-    dimensions = [4, 8, 16, 32]
-    names = ['football', 'polbooks', 'facebook']
+    dimensions = [32, 64]
+    names = ['facebook', 'football', 'polbooks']
 
     for (method, name, dim) in product(methods, names, dimensions):
         print(method, name, dim)

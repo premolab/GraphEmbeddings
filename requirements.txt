@@ -4,5 +4,5 @@ pandas
 sklearn
 networkx
 numpy
-tensorflow
+tensorflow-gpu
 gensim

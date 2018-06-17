@@ -14,7 +14,7 @@ if __name__ == '__main__':
     loss_methods = ['ASIM']
     calc_pos_methods = ['NORMAL', 'WEIGHTED']
     calc_neg_methods = ['NORMAL', 'WEIGHTED', 'IGNORE_NEG']
-    calc_hist_methods = ['NORMAL']
+    calc_hist_methods = ['TF-KDE']
     batch_sizes = [0]
 
     for (metric,
@@ -47,6 +47,6 @@ if __name__ == '__main__':
     for (method, name, dim) in product(methods, names, dimensions):
         print(method, name, dim)
         try:
-            run(RunConfiguration(method, name, dim), path_to_dumps=Path('../dumps').absolute())
+            run(RunConfiguration(method, name, dim), path_to_dumps=Path('./dumps').absolute())
         except Exception as e:
             print(e)
