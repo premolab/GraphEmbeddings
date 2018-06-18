@@ -85,10 +85,8 @@ class HistLossTransformer:
             elif method == 'TF-KDE':
                 # something is wrong now
                 samples_shape = tf.shape(samples)
-                print(samples_shape)
 
-                def f(x):
-                    tf.distributions.Normal(loc=x, scale=delta / 2)
+                f = lambda x: tf.distributions.Normal(loc=x, scale=delta / 2)
 
                 kde = tf.contrib.distributions.MixtureSameFamily(
                     mixture_distribution=tf.contrib.distributions.Categorical(
@@ -188,7 +186,6 @@ class HistLossTransformer:
             patience_delta=0.001,
             learning_rate=0.1,
             LOG_DIR='./tensorflow_events/',
-            batch_size=0,
             should_stop=None
             ):
 
@@ -196,8 +193,8 @@ class HistLossTransformer:
         bin_num = 64
         N = self.graph.number_of_nodes()
 
-        if batch_size > N or batch_size == 0:
-            batch_size = N
+        batch_size = min(800, N)
+        print("Batch size:", str(batch_size))
 
         _A_batched = tf.placeholder(tf.float32, [batch_size, N])
         _batch_indxs = tf.placeholder(tf.int32, [batch_size])
@@ -221,6 +218,9 @@ class HistLossTransformer:
             _E_corr,
             method=self.hist_loss_configuration.calc_pos_method
         )
+
+        if N <= 1000:
+            _neg_samples = tf.gather(_neg_samples, _neg_sampling_indxs)
 
         _pos_hist = self.calc_hist(_pos_samples, method=self.hist_loss_configuration.calc_hist_method, bin_num=bin_num)
         _neg_hist = self.calc_hist(_neg_samples, method=self.hist_loss_configuration.calc_hist_method, bin_num=bin_num)
@@ -251,6 +251,8 @@ class HistLossTransformer:
             patience_counter = 0
 
             for epoch in range(600):
+                if epoch % 50 == 1:
+                    print('epoch: ' + str(epoch))
                 batch_indxs = np.random.choice(a=N, size=batch_size).astype('int32')
                 A_batched = A[batch_indxs]
                 pos_count = np.count_nonzero(A_batched[:, batch_indxs])

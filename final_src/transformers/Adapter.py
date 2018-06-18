@@ -3,6 +3,7 @@ from transformation.HistLossConfiguration import HistLossConfiguration
 from transformers.DeepWalkTransformer import DeepWalkTransformer
 from transformers.HistLossTransformer import HistLossTransformer
 from transformers.Node2VecTransformer import Node2VecTransformer
+from transformers.HopeTransformer import HopeTransformer
 
 
 def calc_embedding(method,
@@ -38,6 +39,20 @@ def calc_embedding(method,
             seed=seed,
             path_to_dumps=path_to_dumps,
             dump_model=True
+        ).fit()
+        E = read_embedding(path_to_embedding(
+            root=path_to_dumps,
+            method=method,
+            name=graph_name,
+            dim=dimension
+        ))
+
+    elif method == 'hope':
+        HopeTransformer(
+            graph,
+            graph_name,
+            dimension,
+            path_to_dumps=path_to_dumps
         ).fit()
         E = read_embedding(path_to_embedding(
             root=path_to_dumps,

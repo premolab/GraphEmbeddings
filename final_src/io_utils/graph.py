@@ -10,32 +10,7 @@ from settings import *
 GraphInfo = namedtuple('GraphInfo', ['graph', 'name'])
 
 
-def read_graph(path, directed=False):
-    """
-    Reads the input network in networkx.
-    """
-
-    weighted = False
-    with open(path) as f:
-        for line in f:
-            if len(line.split()) == 3:
-                weighted = True
-            break
-
-    if weighted:
-        G = nx.read_edgelist(path, nodetype=int, data=(('weight', float),), create_using=nx.DiGraph())
-    else:
-        G = nx.read_edgelist(path, nodetype=int, create_using=nx.DiGraph())
-        for edge in G.edges():
-            G[edge[0]][edge[1]]['weight'] = 1
-
-    if not directed:
-        G = G.to_undirected()
-
-    return G
-
-
-def read_graph2(path):
+def read_graph(path):
     return nx.read_edgelist(path, nodetype=int)
 
 
@@ -200,5 +175,11 @@ def load_graph(graph_name, weighted=False) -> nx.Graph:
         return load_email(weighted).graph
     elif graph_name == 'facebook':
         return load_facebook(weighted).graph
+    elif graph_name == 'sbm-01-001':
+        return generate_sbm([300, 300, 300], 0.1, 0.01, 43, weighted=weighted).graph
+    elif graph_name == 'sbm-01-003':
+        return generate_sbm([300, 300, 300], 0.1, 0.03, 43, weighted=weighted).graph
+    elif graph_name == 'sbm-008-003':
+        return generate_sbm([300, 300, 300], 0.08, 0.03, 43, weighted=weighted).graph
     else:
         raise Exception("Unknown graph name: " + graph_name)

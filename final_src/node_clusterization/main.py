@@ -1,23 +1,22 @@
 from itertools import product
-from pathlib import Path
 
 import traceback
 
-from link_prediction.Runner import run
+from node_clusterization.Runner import run_sbm, run_football
+from settings import PATH_TO_DUMPS
 from transformation.HistLossConfiguration import HistLossConfiguration
 from transformation.RunConfiguration import RunConfiguration
 
 
 def main():
     methods = []
-
     methods += ['deepwalk', 'hope']
     metrics = ['EMD']
     simmatrix_methods = ['ID']
     loss_methods = ['ASIM']
     calc_pos_methods = ['NORMAL']
     calc_neg_methods = ['IGNORE-NEG', 'NORMAL']
-    calc_hist_methods = ['TF-KDE']
+    calc_hist_methods = ['NORMAL']
 
     for (metric,
          simmatrix_method,
@@ -38,24 +37,36 @@ def main():
                                               loss_method,
                                               calc_pos_method,
                                               calc_neg_method,
-                                              calc_hist_method,
-                                              ))]
+                                              calc_hist_method))]
+
     dimensions = [4, 8, 16, 32]
-    names = ['sbm-01-001', 'sbm-01-003', 'sbm-008-003', 'football', 'polbooks', 'facebook']
 
     f = open('out.txt', 'w')
-    res = {}
+    res_dict = {}
 
-    for (method, name, dim) in product(methods, names, dimensions):
+    for (method, name, dim) in product(methods, ['sbm-01-001', 'sbm-01-003', 'sbm-008-003'], dimensions):
         print(method, name, dim)
         try:
-            a = run(RunConfiguration(method, name, dim), path_to_dumps=Path('./dumps').absolute())
-            print("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(a) + ',')
-            f.write("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(a) + ',\n')
-            res[method + ' ' + name + ' ' + str(dim)] = a
+            res = run_sbm(RunConfiguration(method, name, dim), path_to_dumps=PATH_TO_DUMPS)
+            print("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(res) + ',')
+            f.write("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(res) + ',')
+            res_dict[method + ' ' + name + ' ' + str(dim)] = res
         except Exception:
             traceback.print_exc()
-    print(res)
+
+    print(res_dict)
+
+    res_dict = {}
+    for (method, name, dim) in product(methods, ['football'], dimensions):
+        print(method, name, dim)
+        try:
+            res = run_football(RunConfiguration(method, name, dim), path_to_dumps=PATH_TO_DUMPS)
+            print("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(res) + ',')
+            f.write("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(res) + ',\n')
+            res_dict[method + ' ' + name + ' ' + str(dim)] = res
+        except Exception:
+            traceback.print_exc()
+    print(res_dict)
 
 
 if __name__ == '__main__':

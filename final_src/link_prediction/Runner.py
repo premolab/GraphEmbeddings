@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 
-from io_utils.graph import load_graph, save_graph, read_graph2
+from io_utils.graph import load_graph, save_graph, read_graph
 from link_prediction.GraphSampler import GraphSampler
 from link_prediction.Metric import calc_link_prediction_roc_auc
 from transformation.RunConfiguration import RunConfiguration
@@ -36,7 +36,7 @@ def run(run_configuration: RunConfiguration, path_to_dumps, ratio=0.5, seed=43):
             str(path)
         )
     else:
-        train_graph = read_graph2(str(path))
+        train_graph = read_graph(str(path))
         print("Loaded cached graph partition from " + str(path))
 
     E = calc_embedding(

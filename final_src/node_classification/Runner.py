@@ -45,3 +45,32 @@ def run_blog_catalog(run_configuration: RunConfiguration, path_to_dumps, seed=43
     ss = ShuffleSplit(n_splits=4, random_state=43, train_size=0.5, test_size=0.5)
     scores = cross_val_score(clf, X, y, cv=ss.split(X), scoring='f1_micro', verbose=0)
     return scores
+
+
+def run_sbm(run_configuration: RunConfiguration, path_to_dumps, seed=43):
+    assert run_configuration.graph_name.startswith('sbm')
+
+    graph = load_graph(
+        run_configuration.graph_name,
+        weighted=True if run_configuration.method == 'node2vec' else False
+    )
+
+    E = calc_embedding(
+        run_configuration.method,
+        graph,
+        run_configuration.graph_name,
+        run_configuration.dimension,
+        path_to_dumps,
+        seed=seed,
+        use_cached=True,
+        neg_sampling=False
+    )
+
+    X = pd.DataFrame(E)
+
+    y = np.array([1] * 300 + [2] * 300 + [3] * 300, dtype=np.int32)
+
+    clf = LogisticRegression()
+    ss = ShuffleSplit(n_splits=4, random_state=43, train_size=0.5, test_size=0.5)
+    scores = cross_val_score(clf, X, y, cv=ss.split(X), scoring='f1_micro', verbose=0)
+    return scores

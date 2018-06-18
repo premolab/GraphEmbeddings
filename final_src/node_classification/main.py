@@ -1,22 +1,23 @@
 from itertools import product
 
 import traceback
+import numpy as np
 
-from node_classification.Runner import run_blog_catalog
+from node_classification.Runner import run_blog_catalog, run_sbm
 from settings import PATH_TO_DUMPS
 from transformation.HistLossConfiguration import HistLossConfiguration
 from transformation.RunConfiguration import RunConfiguration
 
-if __name__ == '__main__':
-    methods = []
 
+def main():
+    methods = []
+    methods += ['deepwalk', 'hope']
     metrics = ['EMD']
-    simmatrix_methods = ['ID', 'ADA']
+    simmatrix_methods = ['ID']
     loss_methods = ['ASIM']
-    calc_pos_methods = ['NORMAL', 'WEIGHTED']
-    calc_neg_methods = ['NORMAL', 'WEIGHTED', 'IGNORE_NEG']
+    calc_pos_methods = ['NORMAL']
+    calc_neg_methods = ['IGNORE-NEG', 'NORMAL']
     calc_hist_methods = ['NORMAL']
-    batch_sizes = [800]
 
     for (metric,
          simmatrix_method,
@@ -24,14 +25,14 @@ if __name__ == '__main__':
          calc_pos_method,
          calc_neg_method,
          calc_hist_method,
-         batch_size) in product(metrics,
+         ) in product(metrics,
                                 simmatrix_methods,
                                 loss_methods,
                                 calc_pos_methods,
                                 calc_neg_methods,
                                 calc_hist_methods,
-                                batch_sizes):
-        if calc_neg_method != calc_pos_method:
+                                ):
+        if (calc_neg_method == 'WEIGHTED') ^ (calc_pos_method == 'WEIGHTED'):
             continue
         methods += ['hist_loss_' +
                     str(HistLossConfiguration(metric,
@@ -40,15 +41,37 @@ if __name__ == '__main__':
                                               calc_pos_method,
                                               calc_neg_method,
                                               calc_hist_method,
-                                              batch_size))]
-    methods += ['deepwalk']
-    dimensions = [4, 8, 16, 32]
-    names = ['blog_catalog']
+                                              ))]
 
-    for (method, name, dim) in product(methods, names, dimensions):
+    dimensions = [4, 8, 16, 32]
+
+    f = open('out.txt', 'w')
+    res_dict = {}
+
+    for (method, name, dim) in product(methods, ['sbm-01-001', 'sbm-01-003', 'sbm-008-003'], dimensions):
         print(method, name, dim)
         try:
-            print(run_blog_catalog(RunConfiguration(method, name, dim), path_to_dumps=PATH_TO_DUMPS))
+            res = run_sbm(RunConfiguration(method, name, dim), path_to_dumps=PATH_TO_DUMPS)
+            x = np.mean(res)
+            print("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(x) + ',')
+            f.write("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(x) + ',\n')
+            res_dict[method + ' ' + name + ' ' + str(dim)] = x
         except Exception:
             traceback.print_exc()
 
+    for (method, name, dim) in product(methods, ['blog_catalog'], dimensions):
+        print(method, name, dim)
+        try:
+            res = run_blog_catalog(RunConfiguration(method, name, dim), path_to_dumps=PATH_TO_DUMPS)
+            x = np.mean(res)
+            print("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(x) + ',')
+            f.write("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(x) + ',\n')
+            res_dict[method + ' ' + name + ' ' + str(dim)] = x
+        except Exception:
+            traceback.print_exc()
+
+    print(res_dict)
+
+
+if __name__ == '__main__':
+    main()
