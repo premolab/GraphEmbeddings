@@ -1,5 +1,6 @@
 PATH_TO_DUMPS = '/home/tsepa/GraphEmbeddings/final_src/dumps'
 PATH_TO_EMAIL = '/home/tsepa/GraphEmbeddings/cluster-datasets'
+PATH_TO_CYCLES = '/home/tsepa/GraphEmbeddings/cluster-datasets'
 PATH_TO_BLOG_CATALOG = '/home/tsepa/GraphEmbeddings/BlogCatalog-dataset'
 PATH_TO_KARATE = '/home/tsepa/GraphEmbeddings/Karate-dataset'
 PATH_TO_FOOTBALL = '/home/tsepa/GraphEmbeddings/cluster-datasets'

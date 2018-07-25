@@ -62,8 +62,7 @@ def run_sbm(run_configuration: RunConfiguration, path_to_dumps, seed=43):
         run_configuration.dimension,
         path_to_dumps,
         seed=seed,
-        use_cached=True,
-        neg_sampling=False
+        use_cached=True
     )
 
     X = pd.DataFrame(E)

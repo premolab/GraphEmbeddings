@@ -5,15 +5,16 @@ from transformation.HistLossConfiguration import HistLossConfiguration
 from transformation.RunConfiguration import RunConfiguration
 from transformation.Runner import run
 
-if __name__ == '__main__':
 
-    methods = ['deepwalk', 'node2vec']
+def main():
+
+    methods = ['deepwalk']
 
     metrics = ['EMD']
     simmatrix_methods = ['ID']
     loss_methods = ['ASIM']
     calc_pos_methods = ['NORMAL']
-    calc_neg_methods = ['IGNORE_NEG', 'NORMAL']
+    calc_neg_methods = ['IGNORE-NEG']
     calc_hist_methods = ['TF-KDE']
 
     for (metric,
@@ -37,8 +38,8 @@ if __name__ == '__main__':
                                               calc_hist_method,
                                               ))]
 
-    dimensions = [4, 8, 16, 32]
-    names = ['football', 'karate', 'stars', 'polbooks', 'email']
+    dimensions = [3, 4, 8, 16]
+    names = ['stars']
 
     for (method, name, dim) in product(methods, names, dimensions):
         print(method, name, dim)
@@ -46,3 +47,7 @@ if __name__ == '__main__':
             run(RunConfiguration(method, name, dim), path_to_dumps=Path('./dumps').absolute())
         except Exception as e:
             print(e)
+
+
+if __name__ == '__main__':
+    main()

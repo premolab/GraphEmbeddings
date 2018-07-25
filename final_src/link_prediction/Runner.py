@@ -46,7 +46,7 @@ def run(run_configuration: RunConfiguration, path_to_dumps, ratio=0.5, seed=43):
         run_configuration.dimension,
         path_to_dumps,
         use_cached=True,
-        should_stop=should_stop
+        should_stop=None
     )
 
     train_edges = train_graph.edges()

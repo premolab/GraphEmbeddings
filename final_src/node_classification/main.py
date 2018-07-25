@@ -11,12 +11,12 @@ from transformation.RunConfiguration import RunConfiguration
 
 def main():
     methods = []
-    methods += ['deepwalk', 'hope']
+    methods += ['deepwalk']
     metrics = ['EMD']
     simmatrix_methods = ['ID']
     loss_methods = ['ASIM']
     calc_pos_methods = ['NORMAL']
-    calc_neg_methods = ['IGNORE-NEG', 'NORMAL']
+    calc_neg_methods = ['IGNORE-NEG']
     calc_hist_methods = ['NORMAL']
 
     for (metric,
@@ -45,10 +45,10 @@ def main():
 
     dimensions = [4, 8, 16, 32]
 
-    f = open('out.txt', 'w')
+    f = open('out_clas.txt', 'w')
     res_dict = {}
 
-    for (method, name, dim) in product(methods, ['sbm-01-001', 'sbm-01-003', 'sbm-008-003'], dimensions):
+    for (method, name, dim) in product(methods, ['sbm-01-001'], dimensions):
         print(method, name, dim)
         try:
             res = run_sbm(RunConfiguration(method, name, dim), path_to_dumps=PATH_TO_DUMPS)
@@ -59,7 +59,7 @@ def main():
         except Exception:
             traceback.print_exc()
 
-    for (method, name, dim) in product(methods, ['blog_catalog'], dimensions):
+    for (method, name, dim) in product(methods, [], dimensions):
         print(method, name, dim)
         try:
             res = run_blog_catalog(RunConfiguration(method, name, dim), path_to_dumps=PATH_TO_DUMPS)

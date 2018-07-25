@@ -41,9 +41,9 @@ def main():
                                               calc_hist_method,
                                               ))]
     dimensions = [4, 8, 16, 32]
-    names = ['sbm-01-001', 'sbm-01-003', 'sbm-008-003', 'football', 'polbooks', 'facebook']
+    # names = ['sbm-01-001', 'sbm-01-003', 'sbm-008-003', 'football', 'polbooks', 'facebook']
+    names = ['blog_catalog']
 
-    f = open('out.txt', 'w')
     res = {}
 
     for (method, name, dim) in product(methods, names, dimensions):
@@ -51,7 +51,6 @@ def main():
         try:
             a = run(RunConfiguration(method, name, dim), path_to_dumps=Path('./dumps').absolute())
             print("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(a) + ',')
-            f.write("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(a) + ',\n')
             res[method + ' ' + name + ' ' + str(dim)] = a
         except Exception:
             traceback.print_exc()

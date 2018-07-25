@@ -79,6 +79,15 @@ def load_email(weighted=False):
     return GraphInfo(G, 'Email')
 
 
+def load_cycles(weighted=False):
+    graph_filename = '{}/cycles.txt'.format(PATH_TO_CYCLES)
+    G = nx.read_edgelist(graph_filename, nodetype=int)
+    if weighted:
+        for edge in G.edges():
+            G[edge[0]][edge[1]]['weight'] = 1
+    return GraphInfo(G, 'Cycles')
+
+
 def load_amazon(weighted=False):
     graph_filename = '{}/amazon.txt'.format(PATH_TO_AMAZON)
     G = nx.read_edgelist(graph_filename, nodetype=int)
@@ -181,5 +190,7 @@ def load_graph(graph_name, weighted=False) -> nx.Graph:
         return generate_sbm([300, 300, 300], 0.1, 0.03, 43, weighted=weighted).graph
     elif graph_name == 'sbm-008-003':
         return generate_sbm([300, 300, 300], 0.08, 0.03, 43, weighted=weighted).graph
+    elif graph_name == 'cycles':
+        return load_cycles(weighted).graph
     else:
         raise Exception("Unknown graph name: " + graph_name)

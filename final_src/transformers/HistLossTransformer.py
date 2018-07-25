@@ -186,7 +186,8 @@ class HistLossTransformer:
             patience_delta=0.001,
             learning_rate=0.1,
             LOG_DIR='./tensorflow_events/',
-            should_stop=None
+            should_stop=None,
+            save_intermediate=False
             ):
 
         tf.reset_default_graph()
@@ -252,7 +253,10 @@ class HistLossTransformer:
 
             for epoch in range(600):
                 if epoch % 50 == 1:
-                    print('epoch: ' + str(epoch))
+                    print('epoch: ' + str(epoch) + ', loss: ' + str(loss))
+                    if save_intermediate:
+                        E = np.dot(A, W) + b
+                        save_embedding('E_'+str(epoch)+'.txt', np.array(E))
                 batch_indxs = np.random.choice(a=N, size=batch_size).astype('int32')
                 A_batched = A[batch_indxs]
                 pos_count = np.count_nonzero(A_batched[:, batch_indxs])

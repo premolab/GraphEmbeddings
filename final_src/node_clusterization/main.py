@@ -2,7 +2,7 @@ from itertools import product
 
 import traceback
 
-from node_clusterization.Runner import run_sbm, run_football
+from node_clusterization.Runner import run_sbm, run_football, run_polbooks
 from settings import PATH_TO_DUMPS
 from transformation.HistLossConfiguration import HistLossConfiguration
 from transformation.RunConfiguration import RunConfiguration
@@ -41,7 +41,7 @@ def main():
 
     dimensions = [4, 8, 16, 32]
 
-    f = open('out.txt', 'w')
+    f = open('out_clus.txt', 'w')
     res_dict = {}
 
     for (method, name, dim) in product(methods, ['sbm-01-001', 'sbm-01-003', 'sbm-008-003'], dimensions):
@@ -49,14 +49,11 @@ def main():
         try:
             res = run_sbm(RunConfiguration(method, name, dim), path_to_dumps=PATH_TO_DUMPS)
             print("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(res) + ',')
-            f.write("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(res) + ',')
+            f.write("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(res) + ',\n')
             res_dict[method + ' ' + name + ' ' + str(dim)] = res
         except Exception:
             traceback.print_exc()
 
-    print(res_dict)
-
-    res_dict = {}
     for (method, name, dim) in product(methods, ['football'], dimensions):
         print(method, name, dim)
         try:
@@ -66,6 +63,17 @@ def main():
             res_dict[method + ' ' + name + ' ' + str(dim)] = res
         except Exception:
             traceback.print_exc()
+
+    for (method, name, dim) in product(methods, ['polbooks'], dimensions):
+        print(method, name, dim)
+        try:
+            res = run_polbooks(RunConfiguration(method, name, dim), path_to_dumps=PATH_TO_DUMPS)
+            print("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(res) + ',')
+            f.write("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(res) + ',\n')
+            res_dict[method + ' ' + name + ' ' + str(dim)] = res
+        except Exception:
+            traceback.print_exc()
+
     print(res_dict)
 
 
