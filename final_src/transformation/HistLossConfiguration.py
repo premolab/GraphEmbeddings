@@ -1,4 +1,4 @@
-from parse import parse
+from distutils.util import strtobool
 
 from transformation.RunConfiguration import RunConfiguration
 
@@ -10,25 +10,31 @@ class HistLossConfiguration:
                  loss_method,
                  calc_pos_method,
                  calc_neg_method,
-                 calc_hist_method):
+                 calc_hist_method,
+                 embedding_preprocessing_method='normalization'):
         self.metric = metric
         self.simmatrix_method = simmatrix_method
         self.loss_method = loss_method
         self.calc_pos_method = calc_pos_method
         self.calc_neg_method = calc_neg_method
         self.calc_hist_method = calc_hist_method
+        self.embedding_preprocessing_method = embedding_preprocessing_method
 
     def __str__(self):
-        return '{}_{}_{}_{}_{}_{}'.format(self.metric,
-                                             self.simmatrix_method,
-                                             self.loss_method,
-                                             self.calc_pos_method,
-                                             self.calc_neg_method,
-                                             self.calc_hist_method)
+        if self.embedding_preprocessing_method == 'normalization':
+            return '_'.join((self.metric,
+                             self.simmatrix_method,
+                             self.loss_method,
+                             self.calc_pos_method,
+                             self.calc_neg_method,
+                             self.calc_hist_method))
+        else:
+            raise Exception("Embedding preprocessing method {} is not supported"
+                            .format(self.embedding_preprocessing_method))
 
     @staticmethod
     def from_string(s):
-        return HistLossConfiguration(*parse('{}_{}_{}_{}_{}_{}', s))
+        return HistLossConfiguration(*s.split('_'))
 
     @staticmethod
     def from_run_configuration(run_configuration: RunConfiguration):

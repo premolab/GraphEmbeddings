@@ -3,14 +3,14 @@ from itertools import product
 import traceback
 import numpy as np
 
-from node_classification.Runner import run_blog_catalog, run_sbm
+from node_classification.Runner import run_blog_catalog, run_sbm, run_cliques
 from settings import PATH_TO_DUMPS
 from transformation.HistLossConfiguration import HistLossConfiguration
 from transformation.RunConfiguration import RunConfiguration
 
 
 def main():
-    methods = []
+    methods = ['deepwalk', 'hope']
     methods += ['deepwalk']
     metrics = ['EMD']
     simmatrix_methods = ['ID']
@@ -48,7 +48,18 @@ def main():
     f = open('out_clas.txt', 'w')
     res_dict = {}
 
-    for (method, name, dim) in product(methods, ['sbm-01-001'], dimensions):
+    for (method, name, dim) in product(methods, ['cliques'], dimensions):
+        print(method, name, dim)
+        try:
+            res = run_cliques(RunConfiguration(method, name, dim), path_to_dumps=PATH_TO_DUMPS)
+            x = np.mean(res)
+            print("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(x) + ',')
+            f.write("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(x) + ',\n')
+            res_dict[method + ' ' + name + ' ' + str(dim)] = x
+        except Exception:
+            traceback.print_exc()
+
+    for (method, name, dim) in product(methods, [], dimensions):
         print(method, name, dim)
         try:
             res = run_sbm(RunConfiguration(method, name, dim), path_to_dumps=PATH_TO_DUMPS)

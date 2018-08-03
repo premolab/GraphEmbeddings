@@ -88,6 +88,24 @@ def load_cycles(weighted=False):
     return GraphInfo(G, 'Cycles')
 
 
+def load_cliques(weighted=False):
+    graph_filename = '{}/cliques.txt'.format(PATH_TO_CYCLES)
+    G = nx.read_edgelist(graph_filename, nodetype=int)
+    if weighted:
+        for edge in G.edges():
+            G[edge[0]][edge[1]]['weight'] = 1
+    return GraphInfo(G, 'Cliques')
+
+
+def load_scientists():
+    graph_filename = '{}/scientists.txt'.format(PATH_TO_CYCLES)
+    G = nx.read_weighted_edgelist(graph_filename, nodetype=int)
+    # if weighted:
+    #     for edge in G.edges():
+    #         G[edge[0]][edge[1]]['weight'] = 1
+    return GraphInfo(G, 'Scientists')
+
+
 def load_amazon(weighted=False):
     graph_filename = '{}/amazon.txt'.format(PATH_TO_AMAZON)
     G = nx.read_edgelist(graph_filename, nodetype=int)
@@ -192,5 +210,9 @@ def load_graph(graph_name, weighted=False) -> nx.Graph:
         return generate_sbm([300, 300, 300], 0.08, 0.03, 43, weighted=weighted).graph
     elif graph_name == 'cycles':
         return load_cycles(weighted).graph
+    elif graph_name == 'cliques':
+        return load_cliques(weighted).graph
+    elif graph_name == 'scientists':
+        return load_scientists().graph
     else:
         raise Exception("Unknown graph name: " + graph_name)

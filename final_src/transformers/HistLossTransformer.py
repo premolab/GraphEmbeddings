@@ -46,10 +46,35 @@ class HistLossTransformer:
         E = self.run(
             should_stop=self.should_stop
         )
-        save_embedding(
-            path,
-            E=np.array(E)
-        )
+        if self.hist_loss_configuration.embedding_preprocessing_method == 'normalization':
+            save_embedding(
+                path,
+                E=np.array(E),
+                normalize=True
+            )
+        elif self.hist_loss_configuration.embedding_preprocessing_method == 'sigmoid':
+            save_embedding(
+                path,
+                E=np.array(E),
+                normalize=False
+            )
+        else:
+            raise Exception('Cannot save embedding')
+
+    @staticmethod
+    def preprocess_embedding(E, method):
+        with tf.name_scope('preprocess_embedding'):
+            if method == 'normalization':
+                E_norm = E / tf.reshape(tf.norm(E, axis=1), (tf.shape(E)[0], 1))
+                E_corr = tf.matmul(E_norm, E_norm, transpose_b=True)
+                return E_corr
+            elif method == 'sigmoid':
+                E_scalar = tf.matmul(E, E, transpose_b=True)
+                E_sigmoid = tf.sigmoid(E_scalar)  # in [0, 1]
+                E_sigmoid = tf.subtract(tf.multiply(E_sigmoid, 2), 1)  # in [-1, 1]
+                return E_sigmoid
+            else:
+                raise Exception('Unknown method "' + method + '"')
 
     @staticmethod
     def calc_loss(pos_hist, neg_hist, method):
@@ -205,9 +230,7 @@ class HistLossTransformer:
         _b_batched = tf.gather(_b, indices=_batch_indxs)
 
         _E = tf.matmul(_A_batched, _W) + _b_batched
-        with tf.name_scope('calc_corr') as scope:
-            _E_norm = _E / tf.reshape(tf.norm(_E, axis=1), (tf.shape(_E)[0], 1))
-            _E_corr = tf.matmul(_E_norm, _E_norm, transpose_b=True)
+        _E_corr = self.preprocess_embedding(_E, self.hist_loss_configuration.embedding_preprocessing_method)
         _A_batched_square = tf.gather(_A_batched, _batch_indxs, axis=1)
         _neg_samples = self.calc_neg_samples(
             _A_batched_square,

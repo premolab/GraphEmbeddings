@@ -7,7 +7,6 @@ from transformation.Runner import run
 
 
 def main():
-
     methods = ['deepwalk']
 
     metrics = ['EMD']
@@ -16,19 +15,22 @@ def main():
     calc_pos_methods = ['NORMAL']
     calc_neg_methods = ['IGNORE-NEG']
     calc_hist_methods = ['TF-KDE']
+    embedding_preprocessing_methods = ['sigmoid', 'normalization']
 
     for (metric,
          simmatrix_method,
          loss_method,
          calc_pos_method,
          calc_neg_method,
-         calc_hist_method) in product(metrics,
-                                      simmatrix_methods,
-                                      loss_methods,
-                                      calc_pos_methods,
-                                      calc_neg_methods,
-                                      calc_hist_methods,
-                                      ):
+         calc_hist_method,
+         embedding_preprocessing_method) in product(metrics,
+                                                    simmatrix_methods,
+                                                    loss_methods,
+                                                    calc_pos_methods,
+                                                    calc_neg_methods,
+                                                    calc_hist_methods,
+                                                    embedding_preprocessing_methods
+                                                    ):
         methods += ['hist_loss_' +
                     str(HistLossConfiguration(metric,
                                               simmatrix_method,
@@ -36,10 +38,11 @@ def main():
                                               calc_pos_method,
                                               calc_neg_method,
                                               calc_hist_method,
+                                              embedding_preprocessing_method
                                               ))]
 
-    dimensions = [3, 4, 8, 16]
-    names = ['stars']
+    dimensions = [4, 8]
+    names = ['sbm-01-001', 'sbm-01-003', 'stars', 'cycles']
 
     for (method, name, dim) in product(methods, names, dimensions):
         print(method, name, dim)

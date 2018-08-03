@@ -5,7 +5,7 @@ from transformation.main import main as transMain
 
 
 def main():
-    transMain()
+    linkMain()
 
 
 if __name__ == '__main__':

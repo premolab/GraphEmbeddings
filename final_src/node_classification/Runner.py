@@ -47,6 +47,38 @@ def run_blog_catalog(run_configuration: RunConfiguration, path_to_dumps, seed=43
     return scores
 
 
+def run_cliques(run_configuration: RunConfiguration, path_to_dumps, seed=43):
+
+    assert run_configuration.graph_name == 'cliques'
+
+    graph = load_graph(
+        run_configuration.graph_name,
+        weighted=True if run_configuration.method == 'node2vec' else False
+    )
+
+    E = calc_embedding(
+        run_configuration.method,
+        graph,
+        run_configuration.graph_name,
+        run_configuration.dimension,
+        path_to_dumps,
+        seed=seed,
+        use_cached=True
+    )
+
+    X = pd.DataFrame(E)
+
+    y = np.zeros((175, 2))
+    y[:101, 0] = 1
+    y[75:, 1] = 1
+
+    clf = MultilabelOVRClassifier(LogisticRegression(), n_jobs=-1)
+    MultilabelOVRClassifier.set_labels(X.index, y)
+    ss = ShuffleSplit(n_splits=4, random_state=43, train_size=0.5, test_size=0.5)
+    scores = cross_val_score(clf, X, y, cv=ss.split(X), scoring='f1_micro', verbose=0)
+    return scores
+
+
 def run_sbm(run_configuration: RunConfiguration, path_to_dumps, seed=43):
     assert run_configuration.graph_name.startswith('sbm')
 

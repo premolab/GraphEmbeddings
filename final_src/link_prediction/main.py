@@ -1,3 +1,4 @@
+import os
 from itertools import product
 from pathlib import Path
 
@@ -38,18 +39,23 @@ def main():
                                               loss_method,
                                               calc_pos_method,
                                               calc_neg_method,
-                                              calc_hist_method,
+                                              calc_hist_method
                                               ))]
-    dimensions = [4, 8, 16, 32]
-    # names = ['sbm-01-001', 'sbm-01-003', 'sbm-008-003', 'football', 'polbooks', 'facebook']
-    names = ['blog_catalog']
+    dimensions = [4]
+    names = []
+    # names = ['blog_catalog']
+
+    path_to_dumps = Path(os.path.dirname(os.path.abspath(__file__))) / 'dumps'
+    print("Path to dumps: {}".format(path_to_dumps))
 
     res = {}
-
     for (method, name, dim) in product(methods, names, dimensions):
         print(method, name, dim)
         try:
-            a = run(RunConfiguration(method, name, dim), path_to_dumps=Path('./dumps').absolute())
+            a = run(
+                RunConfiguration(method, name, dim),
+                path_to_dumps=path_to_dumps
+            )
             print("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(a) + ',')
             res[method + ' ' + name + ' ' + str(dim)] = a
         except Exception:
