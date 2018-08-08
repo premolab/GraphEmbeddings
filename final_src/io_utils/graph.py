@@ -202,10 +202,24 @@ def load_graph(graph_name, weighted=False) -> nx.Graph:
         return load_email(weighted).graph
     elif graph_name == 'facebook':
         return load_facebook(weighted).graph
+    elif graph_name == 'sbm-01-0001':
+        return generate_sbm([300, 300, 300], 0.1, 0.001, 43, weighted=weighted).graph
+    elif graph_name == 'sbm-01-0005':
+        return generate_sbm([300, 300, 300], 0.1, 0.005, 43, weighted=weighted).graph
     elif graph_name == 'sbm-01-001':
         return generate_sbm([300, 300, 300], 0.1, 0.01, 43, weighted=weighted).graph
+    elif graph_name == 'sbm-01-002':
+        return generate_sbm([300, 300, 300], 0.1, 0.02, 43, weighted=weighted).graph
     elif graph_name == 'sbm-01-003':
         return generate_sbm([300, 300, 300], 0.1, 0.03, 43, weighted=weighted).graph
+    elif graph_name == 'sbm-01-004':
+        return generate_sbm([300, 300, 300], 0.1, 0.04, 43, weighted=weighted).graph
+    elif graph_name == 'sbm-01-005':
+        return generate_sbm([300, 300, 300], 0.1, 0.05, 43, weighted=weighted).graph
+    elif graph_name == 'sbm-01-006':
+        return generate_sbm([300, 300, 300], 0.1, 0.06, 43, weighted=weighted).graph
+    elif graph_name == 'sbm-01-007':
+        return generate_sbm([300, 300, 300], 0.1, 0.07, 43, weighted=weighted).graph
     elif graph_name == 'sbm-008-003':
         return generate_sbm([300, 300, 300], 0.08, 0.03, 43, weighted=weighted).graph
     elif graph_name == 'cycles':
