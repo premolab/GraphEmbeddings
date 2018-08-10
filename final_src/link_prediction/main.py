@@ -12,14 +12,14 @@ from transformation.RunConfiguration import RunConfiguration
 def main():
     methods = []
 
-    methods += ['deepwalk', 'hope']
+    methods += ['deepwalk', 'hope', 'sdne']
     metrics = ['EMD']
     simmatrix_methods = ['ID']
     loss_methods = ['ASIM']
     calc_pos_methods = ['NORMAL']
     calc_neg_methods = ['IGNORE-NEG']
     calc_hist_methods = ['TF-KDE']
-    linearities = ['linear', 'nonlinear2', 'nonlinear2-reduce']
+    linearities = ['linear']
 
     for (metric,
          simmatrix_method,
@@ -45,19 +45,19 @@ def main():
                                               calc_hist_method,
                                               linearity
                                               ))]
-    dimensions = [4, 8, 16]
+    dimensions = [4, 8, 16, 32]
     names = []
-    # names = [
+    # names += [
     #     'sbm-01-0001',
     #     'sbm-01-0005',
     #     'sbm-01-001',
     #     'sbm-01-002',
-    #     # 'sbm-01-004',
-    #     # 'sbm-01-005',
-    #     # 'sbm-01-006',
-    #     # 'sbm-01-007',
+    #     'sbm-01-004',
+    #     'sbm-01-005',
+    #     'sbm-01-006',
+    #     'sbm-01-007',
     # ]
-    names += ['football', 'polbooks', 'facebook']
+    names += ['football', 'polbooks']
 
     path_to_dumps = Path(os.path.dirname(os.path.abspath(__file__))) / 'dumps'
     print("Path to dumps: {}".format(path_to_dumps))

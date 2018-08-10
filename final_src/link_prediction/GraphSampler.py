@@ -24,7 +24,7 @@ class GraphSampler:
         while len(res_graph.edges()) > expected_number_of_edges:
             iters += 1
             edges = np.array(res_graph.edges())
-            batch_size = min(300, len(res_graph.edges()) - expected_number_of_edges)
+            batch_size = min(10, len(res_graph.edges()) - expected_number_of_edges)
             edges_to_delete = edges[np.random.choice(np.arange(len(edges)), batch_size)]
             res_graph.remove_edges_from(edges_to_delete)
             if not nx.is_connected(res_graph):

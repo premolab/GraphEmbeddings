@@ -1,13 +1,13 @@
+import os
 from itertools import product
 from pathlib import Path
 
-from transformation.HistLossConfiguration import HistLossConfiguration
 from transformation.RunConfiguration import RunConfiguration
 from transformation.Runner import run
 
 
 def main():
-    methods = ['deepwalk']
+    methods = ['sdne']
 
     metrics = ['EMD']
     simmatrix_methods = ['ID']
@@ -41,13 +41,16 @@ def main():
                                               embedding_preprocessing_method
                                               ))]
 
-    dimensions = [4, 8]
-    names = ['sbm-01-001', 'sbm-01-003', 'stars', 'cycles']
+    dimensions = [4]
+    names = ['sbm-01-001']
+
+    path_to_dumps = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) / 'dumps'
+    print("Path to dumps: {}".format(path_to_dumps))
 
     for (method, name, dim) in product(methods, names, dimensions):
         print(method, name, dim)
         try:
-            run(RunConfiguration(method, name, dim), path_to_dumps=Path('./dumps').absolute())
+            run(RunConfiguration(method, name, dim), path_to_dumps=path_to_dumps.absolute())
         except Exception as e:
             print(e)
 

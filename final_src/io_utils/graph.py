@@ -1,4 +1,5 @@
 from collections import namedtuple
+from functools import reduce
 
 import networkx as nx
 import numpy as np
@@ -73,6 +74,9 @@ def load_polbooks(weighted=False):
 def load_email(weighted=False):
     graph_filename = '{}/email-Eu-core.txt'.format(PATH_TO_EMAIL)
     G = nx.read_edgelist(graph_filename, nodetype=int)
+    nodes_to_remove = reduce(lambda x, y: x.union(y), sorted(nx.connected_components(G), key=len)[:-1])
+    G.remove_nodes_from(nodes_to_remove)
+    assert len(G.nodes()) == 986
     if weighted:
         for edge in G.edges():
             G[edge[0]][edge[1]]['weight'] = 1
@@ -122,6 +126,40 @@ def load_dblp(weighted=False):
         for edge in G.edges():
             G[edge[0]][edge[1]]['weight'] = 1
     return GraphInfo(G, 'DBLP')
+
+
+def load_protein(weighted=False):
+    graph_filename = '{}/protein.txt'.format(PATH_TO_AMAZON)
+    G = nx.read_edgelist(graph_filename, nodetype=int)
+    if weighted:
+        for edge in G.edges():
+            G[edge[0]][edge[1]]['weight'] = 1
+    return GraphInfo(G, 'Protein')
+
+
+def load_collaboration(weighted=False):
+    graph_filename = '{}/collaboration.txt'.format(PATH_TO_AMAZON)
+    G = nx.read_edgelist(graph_filename, nodetype=int)
+    nodes_to_remove = reduce(lambda x, y: x.union(y), sorted(nx.connected_components(G), key=len)[:-1])
+    G.remove_nodes_from(nodes_to_remove)
+    assert len(G.nodes()) == 4158
+    if weighted:
+        for edge in G.edges():
+            G[edge[0]][edge[1]]['weight'] = 1
+    return GraphInfo(G, 'Collaboration')
+
+
+def load_gnutella(weighted=False):
+    graph_filename = '{}/gnutella.txt'.format(PATH_TO_AMAZON)
+    G = nx.read_edgelist(graph_filename, nodetype=int)
+    assert nx.number_connected_components(G) == 2
+    nodes_to_remove = min(nx.connected_components(G), key=len)
+    G.remove_nodes_from(nodes_to_remove)
+    assert len(G.nodes()) == 6299
+    if weighted:
+        for edge in G.edges():
+            G[edge[0]][edge[1]]['weight'] = 1
+    return GraphInfo(G, 'Gnutella')
 
 
 def load_facebook(weighted=False):
@@ -228,5 +266,11 @@ def load_graph(graph_name, weighted=False) -> nx.Graph:
         return load_cliques(weighted).graph
     elif graph_name == 'scientists':
         return load_scientists().graph
+    elif graph_name == 'protein':
+        return load_protein(weighted).graph
+    elif graph_name == 'collaboration':
+        return load_collaboration(weighted).graph
+    elif graph_name == 'gnutella':
+        return load_gnutella(weighted).graph
     else:
         raise Exception("Unknown graph name: " + graph_name)
