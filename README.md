@@ -1,21 +1,22 @@
 # GraphEmbeddings
-Чтобы начать создать в папке `src` файл `settings.py`, в него добавить `PATH_TO_DUMPS=...`:
-папка куда будут сохраняться результаты.
-Плюс можно добавить пути к датасетам, типа `PATH_TO_BLOG_CATALOG` и т.д.
+This repository contains realization of `DDoS` (aka `Histogram loss`)
+algorithm for generating graph embeddings.
 
-Файл `generate_embedding.py` генерит вложения по Костиному коду и сохраняет в папку дампов.
+## Structure
+All code is stored in folder `final_src`
 
-Файл `hist_loss_downhill_experiment.py` запускает градиентный спуск по хист лоссу,
-там в начале указывается датасет, кол-во батчей и т.д.
-Теоретически уже работает с большими графами, т.к. стоит спарс матрица.
-На практике уже после спуска при перемножении матриц падает с `MemoryError`.
+Realization of several embedding algorithm including our algorithm
+can be found in folder `transformers`.
 
-Спуск можно остановить при помощи `Ctrl-c`.
+Folder `io_utils` contains code responsible for reading
+and writing graphs and embeddings.
 
-Чтобы понять что вообще там происходит, можно почитать доки библиотеки downhill.
+Folder `transformation` contains generic code to generate an embedding
+with any available algorithm.
 
-Теано и лазанью желательно устанавливать девелоперские версии
-```
-pip install --upgrade https://github.com/Theano/Theano/archive/master.zip
-pip install --upgrade https://github.com/Lasagne/Lasagne/archive/master.zip
-```
+Other folders represent sets of experiments for comparing algorithms:
+`link_prediction`, `classification` and `clusterization`.
+
+## How to run
+To make this code work you need to replace path to necessary dataset
+in file `final_src/settings.py` with your local path.
