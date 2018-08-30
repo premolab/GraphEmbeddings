@@ -57,7 +57,7 @@ def main():
     #     'sbm-01-006',
     #     'sbm-01-007',
     # ]
-    names += ['football', 'polbooks']
+    names += ['facebook']
 
     path_to_dumps = Path(os.path.dirname(os.path.abspath(__file__))) / 'dumps'
     print("Path to dumps: {}".format(path_to_dumps))
@@ -69,6 +69,7 @@ def main():
             a = run(
                 RunConfiguration(method, name, dim),
                 path_to_dumps=path_to_dumps,
+                score='f1'
             )
             print("'" + method + ' ' + name + ' ' + str(dim) + "': " + str(a) + ',')
             res[method + ' ' + name + ' ' + str(dim)] = a

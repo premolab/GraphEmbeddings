@@ -4,7 +4,7 @@ import numpy as np
 
 from io_utils.graph import load_graph, save_graph, read_graph
 from link_prediction.GraphSampler import GraphSampler
-from link_prediction.Metric import calc_link_prediction_roc_auc
+from link_prediction.Metric import calc_link_prediction_score
 from transformation.RunConfiguration import RunConfiguration
 
 from settings import PATH_TO_LINK_PREDICTION_DATASETS
@@ -20,7 +20,7 @@ def should_stop():
     return res
 
 
-def run(run_configuration: RunConfiguration, path_to_dumps, ratio=0.5, seed=43):
+def run(run_configuration: RunConfiguration, path_to_dumps, ratio=0.5, seed=43, score='roc-auc'):
     graph = load_graph(run_configuration.graph_name)
     edges = graph.edges()
     nodes = graph.nodes()
@@ -70,8 +70,9 @@ def run(run_configuration: RunConfiguration, path_to_dumps, ratio=0.5, seed=43):
             train_neg_edges_set.add(edge)
     assert len(train_neg_edges_set & train_edges_set) == 0
 
-    return calc_link_prediction_roc_auc(E,
-                                        train_edges,
-                                        list(train_neg_edges_set),
-                                        list(test_edges_set),
-                                        list(test_neg_edges_set))
+    return calc_link_prediction_score(E,
+                                      train_edges,
+                                      list(train_neg_edges_set),
+                                      list(test_edges_set),
+                                      list(test_neg_edges_set),
+                                      score='roc-auc')

@@ -1,13 +1,14 @@
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, f1_score
 
 
-def calc_link_prediction_roc_auc(E,
+def calc_link_prediction_score(E,
                                  train_edges,
                                  train_neg_edges,
                                  test_edges,
-                                 test_neg_edges):
+                                 test_neg_edges,
+                                 score='roc-auc'):
     nodes_set = set(e[0] for e in train_edges).union(set(e[1] for e in train_edges))
     assert len(nodes_set) == E.shape[0], str(len(nodes_set)) + ' != ' + str(E.shape[0])
 
@@ -39,4 +40,7 @@ def calc_link_prediction_roc_auc(E,
     clf = LogisticRegression()
     clf.fit(clf_X, clf_y)
     pred_y = clf.predict_proba(test_X)[:, 1]
-    return roc_auc_score(y_true=test_y, y_score=pred_y)
+    if score == 'roc-auc':
+        return roc_auc_score(y_true=test_y, y_score=pred_y)
+    elif score == 'f1':
+        return f1_score(y_true=test_y, y_pred=pred_y)
